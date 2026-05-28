@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Vulnerable Todo App{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <!-- CWE-693: No Content Security Policy -->
+    <!-- CWE-1021: No X-Frame-Options header -->
+    <!-- Missing security headers allow various attacks -->
+</head>
+<body>
+    <!-- CWE-79: XSS via unsanitized content -->
+    <!-- Jinja2 auto-escape is intentionally disabled in some places -->
+
+    <header>
+        <div class="container">
+            <h1>🔓 Vulnerable Todo App</h1>
+            <div class="warning-banner">
+                ⚠️ DELIBERATELY VULNERABLE - FOR EDUCATIONAL PURPOSES ONLY ⚠️
+            </div>
+            {% if username %}
+            <nav>
+                <a href="{{ url_for('todos_page') }}">My Todos</a>
+                <a href="{{ url_for('search') }}">Search</a>
+                {% if is_admin %}
+                <a href="{{ url_for('admin_page') }}">Admin</a>
+                {% endif %}
+                <span class="user-info">Logged in as: {{ username }}</span>
+                <a href="{{ url_for('logout') }}">Logout</a>
+            </nav>
+            {% endif %}
+        </div>
+    </header>
+
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>
+                This application is DELIBERATELY VULNERABLE for cybersecurity education.
+                <br>
+                Contains multiple security vulnerabilities including SQL Injection, XSS, CSRF, IDOR, and more.
+                <br>
+                <strong>DO NOT USE IN PRODUCTION OR EXPOSE TO THE INTERNET</strong>
+            </p>
+        </div>
+    </footer>
+
+    <!-- CWE-79: Inline JavaScript without sanitization -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

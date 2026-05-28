@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Register - Vulnerable Todo App{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <h2>Register</h2>
+
+    {% if error %}
+    <div class="error-message">
+        {{ error|safe }}  <!-- CWE-79: XSS vulnerability -->
+    </div>
+    {% endif %}
+
+    <!-- CWE-352: No CSRF protection -->
+    <!-- CWE-521: Weak password requirements -->
+    <form method="POST" action="{{ url_for('register') }}">
+        <div class="form-group">
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" required>
+            <!-- No username validation -->
+        </div>
+
+        <div class="form-group">
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" required>
+            <!-- CWE-521: No password strength requirements -->
+        </div>
+
+        <div class="form-group">
+            <label for="email">Email (optional):</label>
+            <input type="text" id="email" name="email">
+            <!-- No email validation -->
+        </div>
+
+        <button type="submit">Register</button>
+    </form>
+
+    <p>Already have an account? <a href="{{ url_for('login_page') }}">Login here</a></p>
+
+    <div class="vulnerability-hint">
+        <p><strong>Educational Hints:</strong></p>
+        <ul>
+            <li>No password strength requirements (try "1" as password)</li>
+            <li>No email validation</li>
+            <li>Passwords stored with MD5 hash (CWE-327)</li>
+            <li>No rate limiting on registration</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}{{ todo.title }} - Todo Detail{% endblock %}
+
+{% block content %}
+<div class="todo-detail">
+    <a href="{{ url_for('todos_page') }}" class="back-link">← Back to Todos</a>
+
+    <!-- CWE-79: XSS via unsanitized content -->
+    <h2>{{ todo.title|safe }}</h2>
+
+    <div class="todo-info">
+        <p><strong>Description:</strong></p>
+        <!-- CWE-79: Rendering user input without sanitization -->
+        <div class="todo-description">{{ todo.description|safe }}</div>
+
+        <p><strong>Priority:</strong> <span class="priority-{{ todo.priority }}">{{ todo.priority }}</span></p>
+        <p><strong>Status:</strong>
+            {% if todo.completed %}
+            <span class="status-completed">✓ Completed</span>
+            {% else %}
+            <span class="status-pending">⏳ Pending</span>
+            {% endif %}
+        </p>
+        <p><strong>Created:</strong> {{ todo.created_at }}</p>
+        <p><strong>Updated:</strong> {{ todo.updated_at }}</p>
+    </div>
+
+    <!-- CWE-352: No CSRF protection -->
+    <div class="todo-actions">
+        <h3>Update Todo</h3>
+        <form method="POST" action="{{ url_for('update_todo', todo_id=todo.id) }}">
+            <div class="form-group">
+                <label>Title:</label>
+                <input type="text" name="title" value="{{ todo.title }}">
+            </div>
+            <div class="form-group">
+                <label>Description:</label>
+                <textarea name="description">{{ todo.description }}</textarea>
+            </div>
+            <div class="form-group">
+                <label>Priority:</label>
+                <select name="priority">
+                    <option value="low" {% if todo.priority == 'low' %}selected{% endif %}>Low</option>
+                    <option value="medium" {% if todo.priority == 'medium' %}selected{% endif %}>Medium</option>
+                    <option value="high" {% if todo.priority == 'high' %}selected{% endif %}>High</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" name="completed" {% if todo.completed %}checked{% endif %}>
+                    Mark as completed
+                </label>
+            </div>
+            <button type="submit">Update Todo</button>
+        </form>
+    </div>
+
+    <!-- CWE-434: Unrestricted file upload -->
+    <!-- CWE-352: No CSRF protection -->
+    <div class="file-upload">
+        <h3>File Attachments</h3>
+        <form method="POST" action="{{ url_for('upload_file', todo_id=todo.id) }}" enctype="multipart/form-data">
+            <div class="form-group">
+                <input type="file" name="file" required>
+            </div>
+            <button type="submit">Upload File</button>
+        </form>
+
+        {% if files %}
+        <div class="file-list">
+            <h4>Uploaded Files:</h4>
+            <ul>
+                {% for file in files %}
+                <li>
+                    <!-- CWE-22: Path traversal in file download -->
+                    <a href="{{ url_for('download_file', filename=file.filename) }}">{{ file.filename }}</a>
+                    <span class="file-meta">Uploaded: {{ file.uploaded_at }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="vulnerability-hint">
+        <p><strong>Educational Hints:</strong></p>
+        <ul>
+            <li>Try uploading a malicious file (.php, .exe, etc.)</li>
+            <li>Try path traversal in download: <code>/file/../../etc/passwd</code></li>
+            <li>No CSRF tokens on any forms</li>
+            <li>IDOR: Change todo_id in URL to view/edit others' todos</li>
+            <li>XSS: Update title/description with <code>&lt;img src=x onerror=alert(1)&gt;</code></li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

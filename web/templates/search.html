@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}Search Todos{% endblock %}
+
+{% block content %}
+<div class="search-container">
+    <h2>Search Todos</h2>
+
+    <!-- CWE-89: SQL Injection via search parameter -->
+    <form method="GET" action="{{ url_for('search') }}">
+        <div class="form-group search-box">
+            <input type="text"
+                   name="q"
+                   placeholder="Search todos..."
+                   value="{{ search_term }}"
+                   required>
+            <button type="submit">Search</button>
+        </div>
+    </form>
+
+    {% if error %}
+    <!-- CWE-209: Exposing SQL errors to users -->
+    <div class="error-message">
+        {{ error|safe }}
+    </div>
+    {% endif %}
+
+    {% if search_term %}
+    <div class="search-results">
+        <h3>Search Results for "{{ search_term|safe }}" ({{ todos|length }} found)</h3>
+
+        {% if todos %}
+            {% for todo in todos %}
+            <div class="todo-item">
+                <!-- CWE-79: XSS in search results -->
+                <h4><a href="{{ url_for('todo_detail', todo_id=todo.id) }}">{{ todo.title|safe }}</a></h4>
+                <p>{{ todo.description|safe }}</p>
+                <div class="todo-meta">
+                    <span>Priority: {{ todo.priority }}</span>
+                    <span>User ID: {{ todo.user_id }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p>No todos found matching your search.</p>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <div class="vulnerability-hint">
+        <p><strong>Educational Hints - SQL Injection Examples:</strong></p>
+        <ul>
+            <li>View all todos: <code>' OR '1'='1</code></li>
+            <li>Get database version: <code>' UNION SELECT sqlite_version(),null,null,null,null,null,null,null--</code></li>
+            <li>Extract user data: <code>' UNION SELECT username,password,null,null,null,null,null,null FROM users--</code></li>
+            <li>Boolean-based injection: <code>' AND (SELECT COUNT(*) FROM users) > 0 --</code></li>
+        </ul>
+        <p><strong>Note:</strong> This search queries ALL todos (no user restriction), allowing IDOR attacks.</p>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}My Todos{% endblock %}
+
+{% block content %}
+<div class="todos-container">
+    <h2>My Todos</h2>
+
+    <!-- CWE-352: No CSRF protection on form -->
+    <div class="create-todo-form">
+        <h3>Create New Todo</h3>
+        <form method="POST" action="{{ url_for('create_todo') }}">
+            <div class="form-group">
+                <input type="text" name="title" placeholder="Todo title" required>
+            </div>
+            <div class="form-group">
+                <textarea name="description" placeholder="Description"></textarea>
+            </div>
+            <div class="form-group">
+                <select name="priority">
+                    <option value="low">Low Priority</option>
+                    <option value="medium" selected>Medium Priority</option>
+                    <option value="high">High Priority</option>
+                </select>
+            </div>
+            <button type="submit">Create Todo</button>
+        </form>
+    </div>
+
+    <div class="todo-list">
+        <h3>Your Todos ({{ todos|length }})</h3>
+        {% if todos %}
+            {% for todo in todos %}
+            <div class="todo-item {% if todo.completed %}completed{% endif %} priority-{{ todo.priority }}">
+                <!-- CWE-79: XSS - Unsanitized output using |safe filter -->
+                <h4><a href="{{ url_for('todo_detail', todo_id=todo.id) }}">{{ todo.title|safe }}</a></h4>
+                <p>{{ todo.description|safe }}</p>
+                <div class="todo-meta">
+                    <span>Priority: {{ todo.priority }}</span>
+                    <span>Created: {{ todo.created_at }}</span>
+                    {% if todo.completed %}
+                    <span class="status-badge">✓ Completed</span>
+                    {% endif %}
+                </div>
+
+                <!-- CWE-352: No CSRF protection -->
+                <form method="POST" action="{{ url_for('delete_todo', todo_id=todo.id) }}" style="display: inline;">
+                    <button type="submit" class="btn-delete" onclick="return confirm('Delete this todo?')">Delete</button>
+                </form>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p>No todos yet. Create one above!</p>
+        {% endif %}
+    </div>
+
+    {% if shared_todos %}
+    <div class="shared-todos">
+        <h3>Todos Shared With You ({{ shared_todos|length }})</h3>
+        {% for todo in shared_todos %}
+        <div class="todo-item shared">
+            <!-- CWE-79: XSS vulnerability -->
+            <h4><a href="{{ url_for('todo_detail', todo_id=todo.id) }}">{{ todo.title|safe }}</a></h4>
+            <p>{{ todo.description|safe }}</p>
+            <div class="todo-meta">
+                <span>Owner: {{ todo.owner_username }}</span>
+                <span>Priority: {{ todo.priority }}</span>
+                {% if todo.can_edit %}
+                <span class="badge">Can Edit</span>
+                {% else %}
+                <span class="badge">View Only</span>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="vulnerability-hint">
+        <p><strong>Educational Hints:</strong></p>
+        <ul>
+            <li>Try XSS in todo title: <code>&lt;script&gt;alert('XSS')&lt;/script&gt;</code></li>
+            <li>Try SQL injection in title: <code>' OR '1'='1</code></li>
+            <li>No CSRF protection on delete</li>
+            <li>View other users' todos by changing ID in URL</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

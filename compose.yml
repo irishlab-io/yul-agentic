@@ -1,0 +1,96 @@
+---
+name: ibc
+
+# DELIBERATELY VULNERABLE DOCKER COMPOSE - FOR EDUCATIONAL PURPOSES ONLY
+# This configuration contains intentional security vulnerabilities.
+# DO NOT use in production!
+
+version: '3.8'
+
+services:
+  # Vulnerable web application
+  vulnerable-todo-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vulnerable-todo-app
+
+    # CWE-250: Running with privileged mode (unnecessary and dangerous)
+    # VULNERABILITY: privileged gives container root access to host
+    privileged: true
+
+    # CWE-732: Mounting host filesystem with write access
+    # VULNERABILITY: Allows container to modify host files
+    volumes:
+      - ./:/app
+      - /var/run/docker.sock:/var/run/docker.sock  # Extremely dangerous!
+      - ./data:/app/data
+      - ./uploads:/app/uploads
+
+    ports:
+      # VULNERABILITY: Exposing to all interfaces (0.0.0.0)
+      # Better: Use 127.0.0.1:8000:8000 to restrict to localhost
+      - "8000:8000"
+      - "8080:8080"  # Extra unnecessary ports
+      - "3000:3000"
+
+    # CWE-798: Hardcoded credentials in environment
+    environment:
+      - DEBUG=True
+      - FLASK_ENV=development
+      - DATABASE_PASSWORD=insecure123
+      - SECRET_KEY=hardcoded-secret-key
+      - API_KEY=12345
+      - ADMIN_PASSWORD=admin
+      # VULNERABILITY: Exposing internal network information
+      - INTERNAL_API_URL=http://192.168.1.100:8080
+      - AWS_ACCESS_KEY=AKIAIOSFODNN7EXAMPLE
+      - AWS_SECRET_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+
+    # CWE-693: Protection mechanism failure
+    # VULNERABILITY: No security options, no read-only root filesystem
+    # security_opt:
+    #   - no-new-privileges:true
+    # read_only: true  # Commented out intentionally
+
+    # VULNERABILITY: Running as root (no user specified)
+    # user: "1000:1000"  # Commented out intentionally
+
+    # VULNERABILITY: No resource limits (can consume all host resources)
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: '0.5'
+    #       memory: 512M
+
+    networks:
+      - vulnerable-network
+
+    # VULNERABILITY: Always restart (could restart vulnerable/compromised container)
+    restart: always
+
+    # VULNERABILITY: No health check defined
+    # healthcheck:
+    #   test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+    #   interval: 30s
+    #   timeout: 3s
+    #   retries: 3
+
+networks:
+  vulnerable-network:
+    driver: bridge
+    # VULNERABILITY: No network isolation or encryption
+
+# Educational notes about vulnerabilities:
+# 1. privileged: true - Gives full host access
+# 2. Mounting /var/run/docker.sock - Container can control Docker host
+# 3. Exposing ports on 0.0.0.0 - Accessible from any interface
+# 4. Hardcoded secrets in environment variables
+# 5. No resource limits - Can DoS the host
+# 6. Running as root user
+# 7. restart: always - Keeps vulnerable service running
+# 8. No security options (no-new-privileges, seccomp, apparmor)
+# 9. Mounting host directories with write access
+# 10. No health checks
+# 11. Debug mode enabled
+# 12. Multiple unnecessary exposed ports

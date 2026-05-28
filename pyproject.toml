@@ -1,0 +1,84 @@
+[project]
+name = "vulnerable-todo-app"
+version = "0.1.0"
+description = "Deliberately vulnerable todo list application for cybersecurity education - DO NOT USE IN PRODUCTION"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    # Using newer but still vulnerable versions compatible with Python 3.11-3.13 with binary wheels
+    "click==8.0.4",
+    "cryptography==38.0.4", # Still has some known issues
+    "flask==2.2.5",        # CVE-2023-30861 (path traversal), CVE-2023-25577
+    "itsdangerous==2.0.1", # Timing attack vulnerabilities
+    "jinja2==3.0.3",       # CVE-2024-22195, CVE-2024-34064
+    "lxml==5.1.0",         # Still has XXE vulnerabilities, pre-built wheels
+    "markupsafe==2.1.1",
+    "pillow==10.0.0",      # CVE-2023-44271, multiple image processing CVEs, pre-built wheels
+    "pyyaml==6.0.1",       # CVE-2020-14343 (unsafe load), pre-built wheels
+    "requests==2.27.1",    # CVE-2023-32681
+    "sqlalchemy==1.4.46",  # CVE-2023-46695 (SQLi potential)
+    "werkzeug==2.2.3",     # CVE-2023-25577, CVE-2023-23934
+]
+
+
+[dependency-groups]
+build = [
+    "build==0.10.0",
+    "packaging==23.1",
+    "wheel==0.41.0",
+]
+dev = [
+    "build==0.10.0",
+    "faker>=33.1.0",
+    "ggshield>=1.10.8",
+    "pathspec==0.11.2",
+    "pip-tools==7.2.0",
+    "platformdirs==3.10.0",
+    "playwright>=1.57.0",
+    "pre-commit>=4.5.0",
+    "pyproject-hooks==1.0.0",
+    "pytest-mock>=3.15.1",
+    "pytest-cov>=4.1.0",
+    "pytest-flask>=1.2.0",
+    "pytest>=7.4.0",
+    "pytest-xdist>=3.8.0",
+    "ruff>=0.14.4",
+    "tomli==2.0.1",
+    "ty>=0.0.1a34",
+]
+
+
+[tool.uv]
+required-version = ">=0.9.18"
+index =[
+    {name="pip", url = "https://pypi.org/simple", default = true}
+]
+
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "--cov-fail-under=75",
+    "--cov-report=html:tests/coverage/html",
+    "--cov-report=html",
+    "--cov-report=term-missing",
+    "--cov-report=xml:tests/coverage/coverage.xml",
+    "--cov-report=xml",
+    "--cov=src",
+    "--numprocesses", "auto",
+    "--strict-markers",
+    "--tb=short",
+    "--verbose",
+]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+    "unit: marks tests as unit tests",
+]
+
+
+# Note: This project intentionally uses outdated and vulnerable packages
+# for educational purposes. Never use these in production!

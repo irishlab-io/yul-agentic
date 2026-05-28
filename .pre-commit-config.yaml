@@ -1,0 +1,113 @@
+---
+# pre-commit install --allow-missing-config
+# pre-commit autoupdate
+# pre-commit run --all-files --color auto
+exclude: |
+  (?x)^(
+    \.pre-commit-config\.yaml$
+  )
+fail_fast: true
+default_stages:
+  - pre-commit
+default_install_hook_types:
+  - commit-msg
+  - pre-commit
+default_language_version:
+  python: python3.10
+repos:
+  - repo: meta
+    hooks:
+      - id: identity
+        name: "meta | pre-commit hooks"
+        stages:
+          - manual
+  - repo: https://github.com/commitizen-tools/commitizen
+    rev: v4.16.2
+    hooks:
+      - id: commitizen
+        name: "commitizen | validate commit messages"
+        stages:
+          - commit-msg
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-added-large-files
+        name: "git | block large files"
+        args: [--maxkb=2048]
+      - id: check-json
+        name: "general | check JSON files"
+      - id: end-of-file-fixer
+        name: "general | fix end of file"
+      - id: mixed-line-ending
+        name: "general | fix line ending"
+        args:
+          - --fix=auto
+      - id: trailing-whitespace
+        name: "general | remove trailing whitespace"
+      - id: pretty-format-json
+        name: "general | prettify JSON files"
+        args:
+          - --autofix
+          - --no-ensure-ascii
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.48.0
+    hooks:
+      - id: markdownlint
+        name: "md | lint: run markdownlint-cli"
+        args:
+          - --config
+          - .config/.markdown-lint.yml
+        exclude: |
+          (?x)
+          ^README.md
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.38.0
+    hooks:
+      - id: yamllint
+        name: "yaml | lint: run yamllint"
+        args:
+          - -c
+          - .config/.yaml-lint.yml
+        exclude: |
+          (?x)
+          ^mkdocs.yml
+  - repo: https://github.com/astral-sh/uv-pre-commit
+    rev: 0.11.16
+    hooks:
+      - id: uv-export
+        name: "python | uv: export dependencies"
+        args: [--no-dev, --output-file, requirements.txt]
+      - id: uv-lock
+        name: "python | uv: lock dependencies"
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.15
+    hooks:
+      - id: ruff-check
+        name: "python | lint: run ruff-check"
+        args:
+          - --fix
+        files: "\\.py$"
+        exclude: |
+          (?x)
+          ^tests/.*
+        stages:
+          - manual
+      - id: ruff-format
+        name: "python | lint: run ruff-format"
+        files: "\\.py$"
+        exclude: |
+          (?x)
+          ^tests/.*
+        stages:
+          - manual
+  - repo: local
+    hooks:
+      - id: pytest
+        name: "python | test: run pytest"
+        entry: |
+          uv run pytest
+        language: system
+        types: [python]
+        pass_filenames: false
+        stages:
+          - manual

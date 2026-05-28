@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Login - Vulnerable Todo App{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <h2>Login</h2>
+
+    {% if error %}
+    <!-- CWE-209: Information exposure through error messages -->
+    <div class="error-message">
+        {{ error|safe }}  <!-- CWE-79: XSS vulnerability - no sanitization -->
+    </div>
+    {% endif %}
+
+    <!-- CWE-352: No CSRF protection -->
+    <!-- CWE-319: Cleartext transmission (if used over HTTP) -->
+    <form method="POST" action="{{ url_for('login') }}">
+        <div class="form-group">
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" required>
+        </div>
+
+        <div class="form-group">
+            <label for="password">Password:</label>
+            <!-- CWE-549: Missing password masking in logs -->
+            <input type="password" id="password" name="password" required>
+        </div>
+
+        <button type="submit">Login</button>
+    </form>
+
+    <p>Don't have an account? <a href="{{ url_for('register_page') }}">Register here</a></p>
+
+    <div class="vulnerability-hint">
+        <p><strong>Educational Hints:</strong></p>
+        <ul>
+            <li>Try SQL injection in username: <code>admin' OR '1'='1</code></li>
+            <li>Try authentication bypass: Add <code>?bypass=true</code> to URL</li>
+            <li>No CSRF protection on this form</li>
+            <li>Default credentials: admin/admin</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}
