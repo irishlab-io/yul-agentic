@@ -1,0 +1,57 @@
+---
+name: "Copilot - Auto Assign on Issue"
+run-name: "Copilot auto-assign for issue #${{ github.event.issue.number }} by ${{ github.actor }}"
+
+# Trigger whenever a label is added to an issue.  If the label is `copilot`
+# the workflow assigns the Copilot coding agent to the issue, which causes it
+# to analyse the issue and open a pull request with an implementation.
+on: # yamllint disable-line rule:truthy
+  issues:
+    types: [labeled]
+
+concurrency:
+  group: copilot-assign-${{ github.event.issue.number }}
+  cancel-in-progress: true
+
+permissions:
+  issues: write
+
+jobs:
+  assign-to-copilot:
+    name: Assign Issue to Copilot
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    # Only run when the label that was just added is exactly `copilot`.
+    if: github.event.label.name == 'copilot'
+
+    steps:
+      - name: Assign issue to Copilot coding agent
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const issueNumber = context.issue.number;
+
+            // Assign the Copilot coding agent as an assignee.
+            // GitHub Copilot starts working on the issue when it is assigned.
+            await github.rest.issues.addAssignees({
+              owner,
+              repo,
+              issue_number: issueNumber,
+              assignees: ['copilot'],
+            });
+
+            // Leave a comment so contributors know the agent has picked it up.
+            await github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number: issueNumber,
+              body: [
+                '🤖 **GitHub Copilot has been assigned to this issue.**',
+                '',
+                'The Copilot coding agent will analyse the issue, implement a solution, and open a pull request for review.',
+                'You can follow progress in the [Actions tab](' +
+                  `${context.serverUrl}/${owner}/${repo}/actions` +
+                  ') or in the session logs linked from the pull request once it is created.',
+              ].join('\n'),
+            });

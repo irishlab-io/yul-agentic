@@ -1,0 +1,50 @@
+---
+name: "Copilot Setup Steps"
+# Automatically validate setup steps when this file changes, and allow
+# manual runs from the Actions tab for ad-hoc verification.
+on: # yamllint disable-line rule:truthy
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+  pull_request:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+
+jobs:
+  # This job MUST be named `copilot-setup-steps` — GitHub Copilot coding
+  # agent discovers it by this exact name and runs it before starting work.
+  copilot-setup-steps:
+    name: Copilot Setup Steps
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+
+    permissions:
+      # Required to check out repository contents.
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Install UV
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+          version: "0.9.18"
+
+      - name: Setup Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          uv sync --all-extras --dev --frozen
+        shell: bash
+
+      - name: Install Playwright browsers
+        run: |
+          uv run playwright install --with-deps
+        shell: bash
