@@ -14,9 +14,8 @@ engine: copilot
 strict: true
 timeout-minutes: 30
 safe-outputs:
-  allowed-domains: [default-safe-outputs]
   create-pull-request:
-    title-prefix: "[ai-issue-fix] "
+    title-prefix: "[ai-issue] "
     labels: [ai-generated]
     max: 1
     expires: 7d
@@ -24,7 +23,12 @@ safe-outputs:
     max: 1
 tools:
   cli-proxy: true
-  bash: ["git *", "python *", "uv *", "pytest *", "ruff *"]
+  bash:
+    - "git status"
+    - "git diff -- ."
+    - "git log --oneline -n 20"
+    - "uv run pytest"
+    - "uv run ruff check ."
   edit:
 ---
 
@@ -43,7 +47,7 @@ You are an autonomous coding agent that converts selected GitHub issues into pul
 
 ## Inputs
 
-- Issue title, body, labels, and comments are your requirements source of truth.
+- Issue title, body, labels, and comments are the source of truth for requirements.
 - Work only in this repository.
 
 ## Implementation workflow
@@ -51,8 +55,8 @@ You are an autonomous coding agent that converts selected GitHub issues into pul
 1. Read and summarize the issue objective and acceptance criteria.
 2. Inspect repository structure and identify the minimum files that must change.
 3. Implement the requested change with a minimal, high-quality patch.
-4. Run the repository's relevant tests/lint checks for the touched area when available.
-5. If tests fail due to unrelated baseline failures, clearly note this in your PR body.
+4. Run available validation commands using the allowed tooling (`uv run ruff check .` and `uv run pytest`) when relevant to the modified files.
+5. If validation fails due to pre-existing unrelated failures, clearly note this in your PR body.
 
 ## Pull request requirements
 
