@@ -203,7 +203,6 @@ jobs:
     needs:
       - code_scan
       - docker_build
-      - secret
     name: Gating
     runs-on: ubuntu-24.04
     timeout-minutes: 5
