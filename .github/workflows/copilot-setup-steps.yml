@@ -41,7 +41,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          uv sync --all-extras --dev --frozen
+          uv sync --all-extras --frozen
         shell: bash
 
       - name: Install Playwright browsers

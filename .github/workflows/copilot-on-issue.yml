@@ -49,7 +49,7 @@ jobs:
               body: [
                 '🤖 **GitHub Copilot has been assigned to this issue.**',
                 '',
-                'The Copilot coding agent will analyse the issue, implement a solution, and open a pull request for review.',
+                'The Copilot coding agent will analyze the issue, implement a solution, and open a pull request for review.',
                 'You can follow progress in the [Actions tab](' +
                   `${context.serverUrl}/${owner}/${repo}/actions` +
                   ') or in the session logs linked from the pull request once it is created.',
