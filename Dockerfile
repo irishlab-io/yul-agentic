@@ -6,7 +6,7 @@
 # VULNERABILITY: Using Python 3.11 base image without security patches
 # Using an older minor version demonstrates the risk of not keeping up with patches
 # Known issues: May contain security vulnerabilities from older Python releases
-FROM python:3.11-slim
+FROM python:3.14.5-slim
 
 # VULNERABILITY: Using ADD instead of COPY (ADD has additional features that can be exploited)
 # Best practice: Use COPY for local files
