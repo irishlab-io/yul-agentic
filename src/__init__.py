@@ -497,7 +497,7 @@ def create_app():
         CWE-611: XXE vulnerability
         """
         if not flag_enabled('utilities', 'xxe'):
-            return jsonify({"error": "Feature disabled"}), 401
+            return jsonify({"error": "Feature disabled"}), 404
 
         auth_info = auth.check_authentication()
         if not auth_info['authenticated']:

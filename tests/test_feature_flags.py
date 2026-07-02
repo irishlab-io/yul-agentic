@@ -32,7 +32,7 @@ def _write_flags_file(content: str) -> str:
 # ---------------------------------------------------------------------------
 
 @pytest.fixture(scope="module")
-def ff_app():
+def feature_flag_app():
     """
     A module-scoped Flask application that uses its own temp SQLite database.
 
@@ -62,9 +62,9 @@ def ff_app():
 
 
 @pytest.fixture
-def ff_client(ff_app):
+def feature_flag_client(feature_flag_app):
     """Return a test client for the isolated Flask app."""
-    return ff_app.test_client()
+    return feature_flag_app.test_client()
 
 
 # ---------------------------------------------------------------------------
@@ -340,7 +340,7 @@ class TestGetAllFlags:
 
 # ---------------------------------------------------------------------------
 # Tests: Flask route integration
-# All Flask tests share one module-scoped app (ff_app) to avoid parallel
+# All Flask tests share one module-scoped app (feature_flag_app) to avoid parallel
 # SQLite conflicts, and are grouped into the same xdist worker.
 # ---------------------------------------------------------------------------
 
@@ -348,40 +348,40 @@ class TestGetAllFlags:
 class TestFlaskRouteIntegration:
     """Feature flags are respected by Flask routes."""
 
-    def test_login_route_disabled(self, ff_client):
+    def test_login_route_disabled(self, feature_flag_client):
         """Login route returns 404 when authentication.login flag is disabled."""
         feature_flags.set_flag("authentication", False, sub_feature="login")
-        response = ff_client.get("/login")
+        response = feature_flag_client.get("/login")
         assert response.status_code == 404
 
-    def test_register_route_disabled(self, ff_client):
+    def test_register_route_disabled(self, feature_flag_client):
         """Register route returns 404 when authentication.register flag is disabled."""
         feature_flags.set_flag("authentication", False, sub_feature="register")
-        response = ff_client.get("/register")
+        response = feature_flag_client.get("/register")
         assert response.status_code == 404
 
-    def test_api_todos_route_disabled(self, ff_client):
+    def test_api_todos_route_disabled(self, feature_flag_client):
         """API todos endpoint returns 404 when api.todos flag is disabled."""
         feature_flags.set_flag("api", False, sub_feature="todos")
-        response = ff_client.get("/api/todos")
+        response = feature_flag_client.get("/api/todos")
         assert response.status_code == 404
 
-    def test_search_route_disabled(self, ff_client):
+    def test_search_route_disabled(self, feature_flag_client):
         """Search route returns 404 when search flag is disabled."""
         feature_flags.set_flag("search", False)
-        response = ff_client.get("/search")
+        response = feature_flag_client.get("/search")
         assert response.status_code == 404
 
-    def test_feature_flags_enabled_by_default_login_accessible(self, ff_client):
+    def test_feature_flags_enabled_by_default_login_accessible(self, feature_flag_client):
         """Login route is accessible when flags are at defaults."""
         feature_flags.reload_flags("/tmp/nonexistent_flags_file_xyz.yml")
-        response = ff_client.get("/login")
+        response = feature_flag_client.get("/login")
         assert response.status_code == 200
 
-    def test_feature_flags_enabled_by_default_register_accessible(self, ff_client):
+    def test_feature_flags_enabled_by_default_register_accessible(self, feature_flag_client):
         """Register route is accessible when flags are at defaults."""
         feature_flags.reload_flags("/tmp/nonexistent_flags_file_xyz.yml")
-        response = ff_client.get("/register")
+        response = feature_flag_client.get("/register")
         assert response.status_code == 200
 
 
@@ -393,32 +393,32 @@ class TestFlaskRouteIntegration:
 class TestApiFeaturesEndpoint:
     """The /api/features endpoint exposes flags without authentication."""
 
-    def test_endpoint_accessible_without_auth(self, ff_client):
+    def test_endpoint_accessible_without_auth(self, feature_flag_client):
         """Anyone can read the feature flags (CWE-200 vulnerability)."""
         feature_flags.reload_flags("/tmp/nonexistent_flags_file_xyz.yml")
-        response = ff_client.get("/api/features")
+        response = feature_flag_client.get("/api/features")
         assert response.status_code == 200
         assert response.is_json
 
-    def test_endpoint_returns_features_key(self, ff_client):
+    def test_endpoint_returns_features_key(self, feature_flag_client):
         """Response JSON contains a 'features' key."""
         feature_flags.reload_flags("/tmp/nonexistent_flags_file_xyz.yml")
-        response = ff_client.get("/api/features")
+        response = feature_flag_client.get("/api/features")
         data = response.get_json()
         assert "features" in data
 
-    def test_endpoint_reflects_all_default_flags(self, ff_client):
+    def test_endpoint_reflects_all_default_flags(self, feature_flag_client):
         """All seven default top-level flags are present in the response."""
         feature_flags.reload_flags("/tmp/nonexistent_flags_file_xyz.yml")
-        response = ff_client.get("/api/features")
+        response = feature_flag_client.get("/api/features")
         data = response.get_json()
         for key in ("authentication", "todos", "admin", "files", "api", "search", "utilities"):
             assert key in data["features"], f"Key '{key}' missing from /api/features response"
 
-    def test_endpoint_reflects_disabled_flag(self, ff_client):
+    def test_endpoint_reflects_disabled_flag(self, feature_flag_client):
         """Disabled flags are reflected in the /api/features response."""
         feature_flags.set_flag("search", False)
-        response = ff_client.get("/api/features")
+        response = feature_flag_client.get("/api/features")
         data = response.get_json()
         search_cfg = data["features"].get("search", {})
         if isinstance(search_cfg, dict):
@@ -438,33 +438,33 @@ class TestQueryParameterOverride:
     This is an intentional CWE-284 vulnerability for educational purposes.
     """
 
-    def test_override_reenables_disabled_login(self, ff_client):
+    def test_override_reenables_disabled_login(self, feature_flag_client):
         """A disabled login feature can be re-enabled via ?override_flag=."""
         feature_flags.set_flag("authentication", False, sub_feature="login")
 
         # Without override – should be 404
-        response = ff_client.get("/login")
+        response = feature_flag_client.get("/login")
         assert response.status_code == 404
 
         # With override – should be accessible again (vulnerability!)
-        response = ff_client.get("/login?override_flag=authentication.login")
+        response = feature_flag_client.get("/login?override_flag=authentication.login")
         assert response.status_code == 200
 
-    def test_override_reenables_disabled_api_todos(self, ff_client):
+    def test_override_reenables_disabled_api_todos(self, feature_flag_client):
         """A disabled api.todos endpoint can be re-enabled via ?override_flag=."""
         feature_flags.set_flag("api", False, sub_feature="todos")
 
-        response = ff_client.get("/api/todos")
+        response = feature_flag_client.get("/api/todos")
         assert response.status_code == 404
 
-        response = ff_client.get("/api/todos?override_flag=api.todos")
+        response = feature_flag_client.get("/api/todos?override_flag=api.todos")
         assert response.status_code == 200
 
-    def test_override_parent_feature_name_bypasses_check(self, ff_client):
+    def test_override_parent_feature_name_bypasses_check(self, feature_flag_client):
         """Passing just the parent feature name also bypasses the check."""
         feature_flags.set_flag("search", False)
 
-        response = ff_client.get("/search?override_flag=search", follow_redirects=False)
+        response = feature_flag_client.get("/search?override_flag=search", follow_redirects=False)
         # Either 200 (bypassed & not authenticated) or 302 (to login) – either
         # confirms the flag check was bypassed since 404 was avoided.
         assert response.status_code in (200, 302)
