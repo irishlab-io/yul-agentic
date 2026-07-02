@@ -1,0 +1,67 @@
+# Feature Flags Configuration
+# ===========================
+# This file controls which features of the application are active.
+#
+# How to use:
+#   - Set the environment variable FEATURE_FLAGS_FILE to the path of this file.
+#   - Mount this file into the container and point FEATURE_FLAGS_FILE at it.
+#   - If no file is found every feature defaults to *enabled*.
+#
+# Toggle a feature:
+#   Set 'enabled: false' on a feature to disable it and all its sub-features.
+#   Set a sub-feature to 'false' to disable only that sub-feature.
+#
+# WARNING – intentional vulnerability in the loader (CWE-502):
+#   The YAML file is loaded with yaml.Loader (not yaml.safe_load).  Never
+#   include untrusted YAML in this file; it can execute arbitrary Python code.
+#
+# Example – disable admin command execution:
+#   admin:
+#     enabled: true
+#     panel: true
+#     command_execution: false   # <-- just change this line
+
+features:
+
+  # ── Authentication ──────────────────────────────────────────────────────
+  authentication:
+    enabled: true    # master switch; false disables login, register, session
+    login: true      # /login route
+    register: true   # /register route
+    session: true    # session validation on protected routes
+
+  # ── Todo management ─────────────────────────────────────────────────────
+  todos:
+    enabled: true    # master switch for all todo operations
+    create: true     # POST /todo/create
+    read: true       # GET  /todos  and  GET /todo/<id>
+    update: true     # POST /todo/<id>/update
+    delete: true     # POST /todo/<id>/delete
+    sharing: true    # POST /todo/<id>/share
+
+  # ── Admin panel ─────────────────────────────────────────────────────────
+  admin:
+    enabled: true           # master switch for admin area
+    panel: true             # GET  /admin
+    command_execution: true # POST /admin/execute  (CWE-78 demo)
+
+  # ── File handling ────────────────────────────────────────────────────────
+  files:
+    enabled: true   # master switch for file features
+    upload: true    # POST /todo/<id>/upload
+    download: true  # GET  /file/<path>
+
+  # ── REST API ────────────────────────────────────────────────────────────
+  api:
+    enabled: true  # master switch for all /api/* endpoints
+    todos: true    # /api/todos  and  /api/todo/*
+
+  # ── Search ──────────────────────────────────────────────────────────────
+  search:
+    enabled: true  # GET /search
+
+  # ── Utility / vulnerability demos ────────────────────────────────────────
+  utilities:
+    enabled: true  # master switch for utility routes
+    ssrf: true     # POST /fetch-url  (CWE-918 demo)
+    xxe: true      # POST /import-xml (CWE-611 demo)

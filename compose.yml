@@ -26,6 +26,9 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock  # Extremely dangerous!
       - ./data:/app/data
       - ./uploads:/app/uploads
+      # Feature flags: mount a custom file to override defaults.
+      # Example: ./my_flags.yml:/app/feature_flags.yml
+      # Then set FEATURE_FLAGS_FILE=/app/feature_flags.yml (already the default).
 
     ports:
       # VULNERABILITY: Exposing to all interfaces (0.0.0.0)
@@ -46,6 +49,9 @@ services:
       - INTERNAL_API_URL=http://192.168.1.100:8080
       - AWS_ACCESS_KEY=AKIAIOSFODNN7EXAMPLE
       - AWS_SECRET_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+      # Feature flags: point to a custom file to selectively disable features.
+      # CWE-22: path is used as-is inside the app (no sanitisation).
+      - FEATURE_FLAGS_FILE=/app/feature_flags.yml
 
     # CWE-693: Protection mechanism failure
     # VULNERABILITY: No security options, no read-only root filesystem
