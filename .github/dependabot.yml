@@ -83,17 +83,9 @@ updates:
     commit-message:
       prefix: "ci"
     groups:
-      pre-commit-minor-patch:
+      pre-commit-all:
         patterns:
           - "*"
-        update-types:
-          - "minor"
-          - "patch"
-      pre-commit-major:
-        patterns:
-          - "*"
-        update-types:
-          - "major"
   - package-ecosystem: "pip"
     directory: "/"
     # registries:
