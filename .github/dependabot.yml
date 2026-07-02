@@ -20,6 +20,10 @@ updates:
     directory: "/"
     # registries:
     #   - docker-registry
+    ignore:
+      - dependency-name: "python"
+        versions:
+          - ">=3.12"
     schedule:
       interval: "monthly"
     open-pull-requests-limit: 5
