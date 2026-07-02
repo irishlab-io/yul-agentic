@@ -16,6 +16,8 @@ Vulnerabilities demonstrated:
 - Insecure Deserialization (CWE-502)
 - Hardcoded Credentials (CWE-798)
 - Weak Cryptography (CWE-327)
+- Feature Flag Bypass (CWE-284)
+- Feature Flag Information Disclosure (CWE-200)
 And many more...
 """
 
@@ -29,6 +31,7 @@ from .models import db
 from . import auth
 from . import database
 from . import utils
+from . import feature_flags
 
 
 def create_app():
@@ -50,6 +53,50 @@ def create_app():
     # Ensure upload directory exists
     os.makedirs(config.UPLOAD_FOLDER, exist_ok=True)
 
+    # ==================== Feature Flag Helper ====================
+
+    def flag_enabled(feat: str, sub: str = None) -> bool:
+        """
+        Check whether a feature is enabled, allowing query-parameter override.
+
+        CWE-284: Improper Access Control – any unauthenticated caller can
+        re-enable a disabled feature by appending
+        ``?override_flag=<feature>[.<sub_feature>]`` to any URL.  This
+        bypass requires no credentials and is intentional for education.
+
+        Parameters:
+        feat (str): Top-level feature name.
+        sub (str): Optional sub-feature name.
+
+        Returns:
+        bool: True if the feature should be treated as enabled.
+        """
+        # VULNERABILITY: No authentication/authorisation check.
+        # Anyone can override any feature flag via a query parameter.
+        override = request.args.get("override_flag", "")
+        if override:
+            expected = f"{feat}.{sub}" if sub else feat
+            if override == expected or override == feat:
+                # VULNERABILITY: Silently re-enables the feature for this request.
+                return True
+
+        return feature_flags.is_enabled(feat, sub)
+
+    # ==================== Feature Flag Before-Request Hook ====================
+
+    @app.before_request
+    def log_feature_flag_override():
+        """
+        CWE-200: Log override attempts to stdout (information disclosure).
+
+        The override_flag parameter value is logged without sanitisation,
+        and anyone watching the server log can observe flag names in use.
+        """
+        override = request.args.get("override_flag")
+        if override:
+            # VULNERABILITY: Logs user-supplied data directly (log injection too).
+            print(f"[FeatureFlags] Override requested: {override} from {request.remote_addr}")
+
     # ==================== Authentication Routes ====================
 
     @app.route('/')
@@ -63,6 +110,8 @@ def create_app():
     @app.route('/login', methods=['GET'])
     def login_page():
         """Login page."""
+        if not flag_enabled('authentication', 'login'):
+            return "Feature disabled", 404
         return render_template('login.html')
 
     @app.route('/login', methods=['POST'])
@@ -72,6 +121,9 @@ def create_app():
         CWE-287: Weak authentication
         CWE-89: SQL Injection in authentication
         """
+        if not flag_enabled('authentication', 'login'):
+            return "Feature disabled", 404
+
         username = request.form.get('username', '')
         password = request.form.get('password', '')
 
@@ -89,6 +141,8 @@ def create_app():
     @app.route('/register', methods=['GET'])
     def register_page():
         """Registration page."""
+        if not flag_enabled('authentication', 'register'):
+            return "Feature disabled", 404
         return render_template('register.html')
 
     @app.route('/register', methods=['POST'])
@@ -97,6 +151,9 @@ def create_app():
         CWE-352: No CSRF protection
         CWE-521: Weak password requirements
         """
+        if not flag_enabled('authentication', 'register'):
+            return "Feature disabled", 404
+
         username = request.form.get('username', '')
         password = request.form.get('password', '')
         email = request.form.get('email', '')
@@ -126,6 +183,9 @@ def create_app():
         Todo list page.
         CWE-79: XSS via unsanitized todo content
         """
+        if not flag_enabled('todos', 'read'):
+            return "Feature disabled", 404
+
         auth_info = auth.check_authentication()
         if not auth_info['authenticated']:
             return redirect(url_for('login_page'))
@@ -154,6 +214,9 @@ def create_app():
         CWE-639: IDOR - No authorization check
         CWE-79: XSS vulnerabilities
         """
+        if not flag_enabled('todos', 'read'):
+            return "Feature disabled", 404
+
         auth_info = auth.check_authentication()
         if not auth_info['authenticated']:
             return redirect(url_for('login_page'))
@@ -181,6 +244,9 @@ def create_app():
         CWE-352: No CSRF protection
         CWE-89: SQL Injection
         """
+        if not flag_enabled('todos', 'create'):
+            return "Feature disabled", 404
+
         auth_info = auth.check_authentication()
         if not auth_info['authenticated']:
             return redirect(url_for('login_page'))
@@ -200,6 +266,9 @@ def create_app():
         CWE-639: IDOR vulnerability
         CWE-352: No CSRF protection
         """
+        if not flag_enabled('todos', 'update'):
+            return "Feature disabled", 404
+
         auth_info = auth.check_authentication()
         if not auth_info['authenticated']:
             return redirect(url_for('login_page'))
@@ -220,6 +289,9 @@ def create_app():
         Delete todo.
         CWE-639: IDOR - Any user can delete any todo
         """
+        if not flag_enabled('todos', 'delete'):
+            return "Feature disabled", 404
+
         auth_info = auth.check_authentication()
         if not auth_info['authenticated']:
             return redirect(url_for('login_page'))
@@ -235,6 +307,9 @@ def create_app():
         Search todos.
         CWE-89: SQL Injection via search parameter
         """
+        if not flag_enabled('search'):
+            return "Feature disabled", 404
+
         auth_info = auth.check_authentication()
         if not auth_info['authenticated']:
             return redirect(url_for('login_page'))
@@ -264,6 +339,9 @@ def create_app():
         CWE-434: Unrestricted file upload
         CWE-22: Path traversal possible
         """
+        if not flag_enabled('files', 'upload'):
+            return "Feature disabled", 404
+
         auth_info = auth.check_authentication()
         if not auth_info['authenticated']:
             return redirect(url_for('login_page'))
@@ -290,6 +368,9 @@ def create_app():
         Download file.
         CWE-22: Path traversal vulnerability
         """
+        if not flag_enabled('files', 'download'):
+            return "Feature disabled", 404
+
         # VULNERABILITY: No path validation - allows ../../../etc/passwd
         try:
             file_path = os.path.join(config.UPLOAD_FOLDER, filename)
@@ -305,6 +386,9 @@ def create_app():
         API endpoint to get todos.
         CWE-306: Missing authentication
         """
+        if not flag_enabled('api', 'todos'):
+            return jsonify({"error": "Feature disabled"}), 404
+
         # VULNERABILITY: No authentication required
         user_id = request.args.get('user_id', 1)
         result = database.get_user_todos(user_id)
@@ -316,6 +400,9 @@ def create_app():
         API endpoint to get single todo.
         CWE-639: IDOR vulnerability
         """
+        if not flag_enabled('api', 'todos'):
+            return jsonify({"error": "Feature disabled"}), 404
+
         # VULNERABILITY: No authentication or authorization
         result = database.get_todo_by_id(todo_id)
         return jsonify(result)
@@ -327,6 +414,9 @@ def create_app():
         CWE-352: No CSRF protection
         CWE-306: Missing authentication
         """
+        if not flag_enabled('api', 'todos'):
+            return jsonify({"error": "Feature disabled"}), 404
+
         # VULNERABILITY: No authentication
         data = request.get_json() or request.form
         user_id = data.get('user_id', 1)
@@ -345,6 +435,9 @@ def create_app():
         Admin page.
         CWE-863: Incorrect authorization
         """
+        if not flag_enabled('admin', 'panel'):
+            return "Feature disabled", 404
+
         auth_info = auth.check_authentication()
 
         # VULNERABILITY: Weak admin check
@@ -365,6 +458,9 @@ def create_app():
         Admin command execution.
         CWE-78: OS Command Injection
         """
+        if not flag_enabled('admin', 'command_execution'):
+            return jsonify({"error": "Feature disabled"}), 404
+
         auth_info = auth.check_authentication()
         if not auth_info.get('is_admin'):
             return jsonify({"error": "Access denied"}), 403
@@ -384,6 +480,9 @@ def create_app():
         Fetch external URL.
         CWE-918: SSRF vulnerability
         """
+        if not flag_enabled('utilities', 'ssrf'):
+            return jsonify({"error": "Feature disabled"}), 404
+
         url = request.form.get('url', '')
 
         # VULNERABILITY: SSRF - No URL validation
@@ -397,6 +496,9 @@ def create_app():
         Import todos from XML.
         CWE-611: XXE vulnerability
         """
+        if not flag_enabled('utilities', 'xxe'):
+            return jsonify({"error": "Feature disabled"}), 401
+
         auth_info = auth.check_authentication()
         if not auth_info['authenticated']:
             return jsonify({"error": "Not authenticated"}), 401
@@ -410,6 +512,22 @@ def create_app():
             return jsonify({"error": root})
 
         return jsonify({"success": True, "message": "XML parsed successfully"})
+
+    # ==================== Feature Flag Routes ====================
+
+    @app.route('/api/features', methods=['GET'])
+    def api_get_features():
+        """
+        Return all current feature flag values.
+
+        CWE-200: Information Disclosure – this endpoint requires no
+        authentication and exposes the full feature flag configuration.
+        An attacker can use this to discover which vulnerability demos are
+        active and plan targeted exploits.  Restrict to admins in real apps.
+        """
+        # VULNERABILITY: No authentication check.
+        all_flags = feature_flags.get_all_flags()
+        return jsonify({"features": all_flags})
 
     # ==================== Error Handlers ====================
 

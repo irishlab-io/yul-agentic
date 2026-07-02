@@ -25,6 +25,11 @@ ENV DATABASE_PASSWORD="insecure_password123" \
 ENV DEBUG=True \
     FLASK_ENV=development
 
+# Feature flags configuration (CWE-22: path not validated inside the app)
+# Override with -e FEATURE_FLAGS_FILE=/path/to/custom_flags.yml
+# or mount a custom file at /app/feature_flags.yml
+ENV FEATURE_FLAGS_FILE=/app/feature_flags.yml
+
 WORKDIR /app
 
 # VULNERABILITY: Not pinning package manager versions
