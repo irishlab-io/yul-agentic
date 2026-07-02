@@ -22,9 +22,8 @@ updates:
     #   - docker-registry
     ignore:
       - dependency-name: "python"
-        update-types:
-          - "version-update:semver-major"
-          - "version-update:semver-minor"
+        versions:
+          - ">=3.12"
     schedule:
       interval: "monthly"
     open-pull-requests-limit: 5
