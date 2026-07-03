@@ -30,17 +30,17 @@ def app():
     app.config['TESTING'] = True
     app.config['DATABASE_PATH'] = db_path
 
+    # Point the global db instance at the per-test temp database so that
+    # parallel workers never share the same SQLite file.
+    db.db_path = db_path
+
     # Initialize database
     with app.app_context():
-        db.init_db()
-        # Create a test user
+        db.init_db()  # creates schema and default admin user
+        # Create an additional test user
         db.execute_query(
             "INSERT INTO users (username, password, email, is_admin) VALUES (?, ?, ?, ?)",
             ('testuser', 'test_hash', 'test@example.com', 0)
-        )
-        db.execute_query(
-            "INSERT INTO users (username, password, email, is_admin) VALUES (?, ?, ?, ?)",
-            ('admin', 'admin_hash', 'admin@example.com', 1)
         )
 
     yield app

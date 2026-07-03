@@ -57,21 +57,28 @@ def get_file_content(filename):
         file_path = os.path.join(config.UPLOAD_FOLDER, filename)
         with open(file_path, 'r') as f:
             return f.read()
-    except Exception as e:
-        return str(e)
+    except Exception:
+        return None
 
 
-def save_uploaded_file(file, filename):
+def save_uploaded_file(file_data, filename):
     """
     CWE-434: Unrestricted Upload of File with Dangerous Type
 
     Saves file without validation of file type or content.
+    Accepts either a Flask FileStorage object or raw bytes.
     """
     # VULNERABILITY: No file type validation
     # VULNERABILITY: No filename sanitization
     file_path = os.path.join(config.UPLOAD_FOLDER, filename)
-    file.save(file_path)
-    return file_path
+    os.makedirs(os.path.dirname(file_path), exist_ok=True)
+    if hasattr(file_data, 'save'):
+        # Flask FileStorage object
+        file_data.save(file_path)
+    else:
+        with open(file_path, 'wb') as f:
+            f.write(file_data)
+    return {'success': True, 'filepath': file_path}
 
 
 def serialize_session(session_data):
@@ -104,14 +111,15 @@ def fetch_url(url):
 
     Fetches URL without validation.
     Allows attacker to scan internal network or access internal services.
+    Returns a dict with 'success', 'content', and optional 'status_code'/'error' keys.
     """
     # VULNERABILITY: No URL validation allows SSRF attacks
     # VULNERABILITY: SSL verification disabled
     try:
         response = requests.get(url, verify=False, timeout=5)
-        return response.text
+        return {'success': True, 'content': response.text, 'status_code': response.status_code}
     except Exception as e:
-        return f"Error fetching URL: {str(e)}"
+        return {'success': False, 'error': f"Error fetching URL: {str(e)}"}
 
 
 def parse_xml(xml_string):
@@ -185,3 +193,17 @@ def is_admin_user(username):
     """
     # VULNERABILITY: Simple string comparison, no cryptographic verification
     return username == "admin" or username.lower() == "administrator"
+
+
+def get_file_checksum(filename, checksum_type="md5"):
+    """
+    Alias for check_file_checksum for API consistency.
+
+    Parameters:
+    filename (str): The name of the file to checksum.
+    checksum_type (str): The checksum algorithm to use (default: 'md5').
+
+    Returns:
+    str: The hex digest of the checksum, or None if the file cannot be read.
+    """
+    return check_file_checksum(filename, checksum_type)

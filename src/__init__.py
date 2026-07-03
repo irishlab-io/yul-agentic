@@ -314,10 +314,11 @@ def create_app():
         if not auth_info['authenticated']:
             return redirect(url_for('login_page'))
 
+        user_id = auth_info['user_id']
         search_term = request.args.get('q', '')
 
         if search_term:
-            result = database.search_todos(search_term)
+            result = database.search_todos(user_id, search_term)
             todos = result.get('todos', [])
             error = result.get('error')
         else:
@@ -331,6 +332,17 @@ def create_app():
                              username=auth_info['username'])
 
     # ==================== File Upload Routes ====================
+
+    @app.route('/upload')
+    def upload_page():
+        """
+        File upload landing page.
+        Redirects authenticated users to todos, unauthenticated users to login.
+        """
+        auth_info = auth.check_authentication()
+        if not auth_info['authenticated']:
+            return redirect(url_for('login_page'))
+        return redirect(url_for('todos_page'))
 
     @app.route('/todo/<int:todo_id>/upload', methods=['POST'])
     def upload_file(todo_id):
@@ -355,7 +367,8 @@ def create_app():
 
         # VULNERABILITY: No file validation, no filename sanitization
         filename = file.filename  # Should use secure_filename()
-        filepath = utils.save_uploaded_file(file, filename)
+        result = utils.save_uploaded_file(file, filename)
+        filepath = result['filepath']
 
         # Add file to database
         database.add_file_to_todo(todo_id, filename, filepath, auth_info['user_id'])
@@ -380,14 +393,24 @@ def create_app():
 
     # ==================== API Routes ====================
 
-    @app.route('/api/todos', methods=['GET'])
+    @app.route('/api/todos', methods=['GET', 'POST'])
     def api_get_todos():
         """
-        API endpoint to get todos.
+        API endpoint to get or create todos.
         CWE-306: Missing authentication
         """
         if not flag_enabled('api', 'todos'):
             return jsonify({"error": "Feature disabled"}), 404
+
+        if request.method == 'POST':
+            # VULNERABILITY: No authentication
+            data = request.get_json() or request.form
+            user_id = data.get('user_id', 1)
+            title = data.get('title', '')
+            description = data.get('description', '')
+            priority = data.get('priority', 'medium')
+            result = database.create_todo(user_id, title, description, priority)
+            return jsonify(result)
 
         # VULNERABILITY: No authentication required
         user_id = request.args.get('user_id', 1)
@@ -486,9 +509,9 @@ def create_app():
         url = request.form.get('url', '')
 
         # VULNERABILITY: SSRF - No URL validation
-        content = utils.fetch_url(url)
+        result = utils.fetch_url(url)
 
-        return jsonify({"content": content})
+        return jsonify(result)
 
     @app.route('/import-xml', methods=['POST'])
     def import_xml():
