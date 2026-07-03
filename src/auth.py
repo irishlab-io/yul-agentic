@@ -71,7 +71,13 @@ def authenticate_user(username, password):
                 "user_id": user['id'],
                 "username": user['username'],
                 "is_admin": user['is_admin'],
-                "session_token": session_token
+                "session_token": session_token,
+                "user": {
+                    "id": user['id'],
+                    "username": user['username'],
+                    "email": user['email'],
+                    "is_admin": user['is_admin']
+                }
             }
         else:
             # CWE-209: Generation of Error Message Containing Sensitive Information
@@ -108,6 +114,10 @@ def check_authentication():
     """
     # VULNERABILITY: Easily bypassable authentication
     session_token = request.cookies.get('session_token')
+
+    # Also check Flask session (set by client.session_transaction() in tests)
+    if not session_token:
+        session_token = session.get('session_token')
 
     if not session_token:
         # Check if bypass parameter exists (intentional backdoor)
@@ -197,3 +207,32 @@ def logout(session_token):
     # VULNERABILITY: Session not actually deleted from database
     # Just returns success without proper cleanup
     return {"success": True, "message": "Logged out"}
+
+
+def get_session_user(session_token):
+    """
+    Get the user associated with a session token.
+
+    CWE-502: Insecure deserialization of session data
+    """
+    return get_user_by_session_token(session_token)
+
+
+def logout_user(session_token):
+    """
+    Logout user and invalidate the session.
+
+    Parameters:
+    session_token (str): The session token to invalidate.
+
+    Returns:
+    dict: Result dict with 'success' key.
+    """
+    try:
+        db.execute_query(
+            "DELETE FROM sessions WHERE session_token = ?",
+            (session_token,)
+        )
+        return {"success": True, "message": "Logged out"}
+    except Exception as e:
+        return {"success": False, "error": str(e)}

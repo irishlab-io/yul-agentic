@@ -20,14 +20,18 @@ def create_todo(user_id, title, description="", priority="medium"):
         VALUES ({user_id}, '{title}', '{description}', '{priority}', datetime('now'), datetime('now'))
     """
 
+    conn = db.get_connection()
     try:
-        db.execute_query(query)
-
-        # Get the last inserted ID
-        last_id = db.execute_query_one("SELECT last_insert_rowid() as id")
-        return {"success": True, "todo_id": last_id['id']}
+        cursor = conn.cursor()
+        cursor.execute(query)
+        last_id = cursor.lastrowid
+        conn.commit()
+        return {"success": True, "todo_id": last_id}
     except Exception as e:
+        conn.rollback()
         return {"success": False, "error": str(e)}
+    finally:
+        conn.close()
 
 
 def get_todo_by_id(todo_id, user_id=None):
@@ -119,7 +123,7 @@ def delete_todo(todo_id, user_id=None):
         return {"success": False, "error": str(e)}
 
 
-def search_todos(search_term, user_id=None):
+def search_todos(user_id, search_term):
     """
     Search todos.
 
@@ -137,25 +141,18 @@ def search_todos(search_term, user_id=None):
         return {"success": False, "error": f"Search error: {str(e)}"}
 
 
-def share_todo(todo_id, shared_with_username, can_edit=False, user_id=None):
+def share_todo(todo_id, shared_with_user_id, can_edit=False, user_id=None):
     """
-    Share todo with another user.
+    Share todo with another user by their user ID.
 
     CWE-639: IDOR - No check if user owns the todo
     """
     # VULNERABILITY: No authorization check
 
-    # Get user ID by username (vulnerable to SQL injection)
-    user_query = f"SELECT id FROM users WHERE username = '{shared_with_username}'"
-    shared_user = db.execute_query_one(user_query)
-
-    if not shared_user:
-        return {"success": False, "error": "User not found"}
-
     # Insert share record
     query = f"""
         INSERT INTO shared_todos (todo_id, shared_with_user_id, can_edit)
-        VALUES ({todo_id}, {shared_user['id']}, {1 if can_edit else 0})
+        VALUES ({todo_id}, {shared_with_user_id}, {1 if can_edit else 0})
     """
 
     try:

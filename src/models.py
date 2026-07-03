@@ -148,6 +148,10 @@ class Database:
         conn.close()
         return result
 
+    def execute_query_all(self, query, params=None):
+        """Execute query and return all results."""
+        return self.execute_query(query, params)
+
 
 # Global database instance
 db = Database()
