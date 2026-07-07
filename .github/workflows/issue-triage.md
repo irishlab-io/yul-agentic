@@ -5,9 +5,10 @@ on:
     types: [opened, reopened]
 engine: copilot
 permissions:
+  contents: read
+  copilot-requests: write
   issues: read
   pull-requests: read
-  contents: read
 safe-outputs:
   add-comment:
     max: 1
