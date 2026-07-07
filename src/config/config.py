@@ -15,7 +15,9 @@ import os
 DATABASE_USER = "admin"
 DATABASE_PASSWORD = "password123"
 DATABASE_NAME = "vulnerable_app.db"
-DATABASE_PATH = os.path.join(os.path.dirname(__file__), "..", "..", "data", DATABASE_NAME)
+DATABASE_PATH = os.path.join(
+    os.path.dirname(__file__), "..", "..", "data", DATABASE_NAME
+)
 
 # CWE-321: Hard-coded secret key
 # Secret keys should be randomly generated and stored securely

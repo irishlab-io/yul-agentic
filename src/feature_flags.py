@@ -108,13 +108,17 @@ def load_flags(flags_file: Optional[str] = None) -> None:
             if loaded and isinstance(loaded, dict) and "features" in loaded:
                 _flags = loaded["features"]
                 # CWE-200: Leaking loaded flag names to stdout.
-                print(f"[FeatureFlags] Loaded {len(_flags)} feature(s): {list(_flags.keys())}")
+                print(
+                    f"[FeatureFlags] Loaded {len(_flags)} feature(s): {list(_flags.keys())}"
+                )
             else:
                 print("[FeatureFlags] 'features' key missing – using defaults")
                 _flags = dict(DEFAULT_FLAGS)
         except Exception as exc:
             # CWE-200: Exposing internal error details.
-            print(f"[FeatureFlags] Failed to parse {flags_file}: {exc} – using defaults")
+            print(
+                f"[FeatureFlags] Failed to parse {flags_file}: {exc} – using defaults"
+            )
             _flags = dict(DEFAULT_FLAGS)
     else:
         print("[FeatureFlags] Config file not found – all features enabled by default")

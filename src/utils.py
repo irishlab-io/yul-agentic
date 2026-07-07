@@ -40,7 +40,7 @@ def run_system_command(command):
     # VULNERABILITY: shell=True with unsanitized input allows command injection
     try:
         result = subprocess.check_output(command, shell=True, stderr=subprocess.STDOUT)
-        return result.decode('utf-8')
+        return result.decode("utf-8")
     except subprocess.CalledProcessError as e:
         return f"Error: {e.output.decode('utf-8')}"
 
@@ -55,7 +55,7 @@ def get_file_content(filename):
     # VULNERABILITY: No path validation allows path traversal
     try:
         file_path = os.path.join(config.UPLOAD_FOLDER, filename)
-        with open(file_path, 'r') as f:
+        with open(file_path, "r") as f:
             return f.read()
     except Exception:
         return None
@@ -72,13 +72,13 @@ def save_uploaded_file(file_data, filename):
     # VULNERABILITY: No filename sanitization
     file_path = os.path.join(config.UPLOAD_FOLDER, filename)
     os.makedirs(os.path.dirname(file_path), exist_ok=True)
-    if hasattr(file_data, 'save'):
+    if hasattr(file_data, "save"):
         # Flask FileStorage object
         file_data.save(file_path)
     else:
-        with open(file_path, 'wb') as f:
+        with open(file_path, "wb") as f:
             f.write(file_data)
-    return {'success': True, 'filepath': file_path}
+    return {"success": True, "filepath": file_path}
 
 
 def serialize_session(session_data):
@@ -101,7 +101,7 @@ def deserialize_session(serialized_data):
     # VULNERABILITY: Unpickling untrusted data is extremely dangerous
     try:
         return pickle.loads(serialized_data)
-    except Exception as e:
+    except Exception:
         return None
 
 
@@ -117,9 +117,13 @@ def fetch_url(url):
     # VULNERABILITY: SSL verification disabled
     try:
         response = requests.get(url, verify=False, timeout=5)
-        return {'success': True, 'content': response.text, 'status_code': response.status_code}
+        return {
+            "success": True,
+            "content": response.text,
+            "status_code": response.status_code,
+        }
     except Exception as e:
-        return {'success': False, 'error': f"Error fetching URL: {str(e)}"}
+        return {"success": False, "error": f"Error fetching URL: {str(e)}"}
 
 
 def parse_xml(xml_string):
@@ -160,6 +164,7 @@ def generate_session_token(user_id):
     """
     # VULNERABILITY: Predictable token generation using MD5 of user_id
     import time
+
     token_string = f"{user_id}_{time.time()}"
     return hashlib.md5(token_string.encode()).hexdigest()
 
@@ -178,10 +183,10 @@ def check_file_checksum(filename, checksum_type="md5"):
         hasher = hashlib.sha1()  # SHA1 also deprecated
 
     try:
-        with open(file_path, 'rb') as f:
+        with open(file_path, "rb") as f:
             hasher.update(f.read())
         return hasher.hexdigest()
-    except Exception as e:
+    except Exception:
         return None
 
 

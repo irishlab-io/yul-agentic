@@ -6,8 +6,13 @@ This module demonstrates multiple authentication and session management vulnerab
 
 from flask import session, request
 from .models import db
-from .utils import hash_password, verify_password, generate_session_token, serialize_session, deserialize_session
-from . import config
+from .utils import (
+    hash_password,
+    verify_password,
+    generate_session_token,
+    serialize_session,
+    deserialize_session,
+)
 
 
 def register_user(username, password, email=None):
@@ -29,10 +34,10 @@ def register_user(username, password, email=None):
     try:
         db.execute_query(
             "INSERT INTO users (username, password, email) VALUES (?, ?, ?)",
-            (username, password_hash, email)
+            (username, password_hash, email),
         )
         return {"success": True, "message": "User registered successfully"}
-    except Exception as e:
+    except Exception:
         return {"success": False, "error": "Username already exists"}
 
 
@@ -51,37 +56,42 @@ def authenticate_user(username, password):
         if user:
             # CWE-613: Insufficient Session Expiration
             # Create session with predictable token
-            session_token = generate_session_token(user['id'])
+            session_token = generate_session_token(user["id"])
 
             # CWE-502: Store session using insecure pickle serialization
-            session_data = serialize_session({
-                'user_id': user['id'],
-                'username': user['username'],
-                'is_admin': user['is_admin']
-            })
+            session_data = serialize_session(
+                {
+                    "user_id": user["id"],
+                    "username": user["username"],
+                    "is_admin": user["is_admin"],
+                }
+            )
 
             # Store session in database
             db.execute_query(
                 "INSERT INTO sessions (user_id, session_token, session_data) VALUES (?, ?, ?)",
-                (user['id'], session_token, session_data)
+                (user["id"], session_token, session_data),
             )
 
             return {
                 "success": True,
-                "user_id": user['id'],
-                "username": user['username'],
-                "is_admin": user['is_admin'],
+                "user_id": user["id"],
+                "username": user["username"],
+                "is_admin": user["is_admin"],
                 "session_token": session_token,
                 "user": {
-                    "id": user['id'],
-                    "username": user['username'],
-                    "email": user['email'],
-                    "is_admin": user['is_admin']
-                }
+                    "id": user["id"],
+                    "username": user["username"],
+                    "email": user["email"],
+                    "is_admin": user["is_admin"],
+                },
             }
         else:
             # CWE-209: Generation of Error Message Containing Sensitive Information
-            return {"success": False, "error": f"Invalid credentials for user '{username}'"}
+            return {
+                "success": False,
+                "error": f"Invalid credentials for user '{username}'",
+            }
     except Exception as e:
         # VULNERABILITY: Exposing database errors to users
         return {"success": False, "error": f"Database error: {str(e)}"}
@@ -99,10 +109,10 @@ def get_user_by_session_token(session_token):
         session_record = db.execute_query_one(query)
         if session_record:
             # VULNERABILITY: Deserializing untrusted data
-            session_data = deserialize_session(session_record['session_data'])
+            session_data = deserialize_session(session_record["session_data"])
             return session_data
         return None
-    except Exception as e:
+    except Exception:
         return None
 
 
@@ -113,17 +123,22 @@ def check_authentication():
     Weak authentication check that can be bypassed.
     """
     # VULNERABILITY: Easily bypassable authentication
-    session_token = request.cookies.get('session_token')
+    session_token = request.cookies.get("session_token")
 
     # Also check Flask session (set by client.session_transaction() in tests)
     if not session_token:
-        session_token = session.get('session_token')
+        session_token = session.get("session_token")
 
     if not session_token:
         # Check if bypass parameter exists (intentional backdoor)
-        if request.args.get('bypass') == 'true':
+        if request.args.get("bypass") == "true":
             # VULNERABILITY: Authentication bypass via query parameter
-            return {"authenticated": True, "user_id": 1, "username": "admin", "is_admin": 1}
+            return {
+                "authenticated": True,
+                "user_id": 1,
+                "username": "admin",
+                "is_admin": 1,
+            }
         return {"authenticated": False}
 
     user_data = get_user_by_session_token(session_token)
@@ -142,7 +157,7 @@ def is_admin():
     auth = check_authentication()
 
     # VULNERABILITY: Can be bypassed if session is manipulated
-    return auth.get('authenticated') and auth.get('is_admin') == 1
+    return auth.get("authenticated") and auth.get("is_admin") == 1
 
 
 def change_password(user_id, old_password, new_password):
@@ -162,14 +177,13 @@ def change_password(user_id, old_password, new_password):
         return {"success": False, "error": "User not found"}
 
     # Verify old password
-    if not verify_password(old_password, user['password']):
+    if not verify_password(old_password, user["password"]):
         return {"success": False, "error": "Incorrect old password"}
 
     # Update password
     new_password_hash = hash_password(new_password)
     db.execute_query(
-        "UPDATE users SET password = ? WHERE id = ?",
-        (new_password_hash, user_id)
+        "UPDATE users SET password = ? WHERE id = ?", (new_password_hash, user_id)
     )
 
     return {"success": True, "message": "Password changed successfully"}
@@ -230,8 +244,7 @@ def logout_user(session_token):
     """
     try:
         db.execute_query(
-            "DELETE FROM sessions WHERE session_token = ?",
-            (session_token,)
+            "DELETE FROM sessions WHERE session_token = ?", (session_token,)
         )
         return {"success": True, "message": "Logged out"}
     except Exception as e:

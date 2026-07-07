@@ -6,7 +6,6 @@ This module demonstrates insecure database design and operations.
 
 import sqlite3
 import hashlib
-from datetime import datetime
 from . import config
 
 
@@ -101,12 +100,19 @@ class Database:
 
         # Create default admin user if not exists
         # CWE-327: Using MD5 for password hashing
-        admin_password_hash = hashlib.md5(config.DEFAULT_ADMIN_PASSWORD.encode()).hexdigest()
+        admin_password_hash = hashlib.md5(
+            config.DEFAULT_ADMIN_PASSWORD.encode()
+        ).hexdigest()
 
         try:
             cursor.execute(
                 "INSERT INTO users (username, password, email, is_admin) VALUES (?, ?, ?, ?)",
-                (config.DEFAULT_ADMIN_USERNAME, admin_password_hash, "admin@vulnerable-app.local", 1)
+                (
+                    config.DEFAULT_ADMIN_USERNAME,
+                    admin_password_hash,
+                    "admin@vulnerable-app.local",
+                    1,
+                ),
             )
             conn.commit()
         except sqlite3.IntegrityError:

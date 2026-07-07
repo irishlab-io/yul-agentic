@@ -5,7 +5,6 @@ This module demonstrates IDOR, SQL injection, and authorization vulnerabilities.
 """
 
 from .models import db
-from datetime import datetime
 
 
 def create_todo(user_id, title, description="", priority="medium"):
@@ -68,7 +67,9 @@ def get_user_todos(user_id):
         return {"success": False, "error": str(e)}
 
 
-def update_todo(todo_id, title=None, description=None, completed=None, priority=None, user_id=None):
+def update_todo(
+    todo_id, title=None, description=None, completed=None, priority=None, user_id=None
+):
     """
     Update todo.
 
