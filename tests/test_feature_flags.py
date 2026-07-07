@@ -468,4 +468,3 @@ class TestQueryParameterOverride:
         # Either 200 (bypassed & not authenticated) or 302 (to login) – either
         # confirms the flag check was bypassed since 404 was avoided.
         assert response.status_code in (200, 302)
-
