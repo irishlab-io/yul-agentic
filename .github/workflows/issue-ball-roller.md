@@ -18,8 +18,7 @@ safe-outputs:
     draft: true
     auto-close-issue: false
     allowed-files:
-      - "src/**"
-      - "tests/**"
+      - "**/*"
 network:
   allowed:
     - defaults
