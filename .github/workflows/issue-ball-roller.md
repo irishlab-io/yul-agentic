@@ -18,7 +18,9 @@ safe-outputs:
     draft: true
     auto-close-issue: false
     allowed-files:
+      - "*"
       - "**/*"
+    protected-files: allowed
 network:
   allowed:
     - defaults
