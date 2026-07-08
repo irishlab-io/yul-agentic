@@ -20,16 +20,9 @@ safe-outputs:
     allowed-files:
       - "src/**"
       - "tests/**"
-mcp-servers:
-  snyk:
-    type: http
-    url: "https://mcp.snyk.io/mcp"
-    headers:
-      Authorization: "Bearer ${{ secrets.SNYK_TOKEN }}"
 network:
   allowed:
     - defaults
-    - "mcp.snyk.io"
 tools:
   github:
     mode: gh-proxy
@@ -40,9 +33,7 @@ tools:
 
 You are a helpful junior developer for an educational cybersecurity project.
 This repository is a **deliberately vulnerable** Flask TODO application.
-It intentionally contains 14+ security vulnerabilities (SQL Injection, XSS, CSRF,
-IDOR, Path Traversal, Command Injection, XXE, SSRF, and more) to teach students
-about real-world security flaws.
+It intentionally contains 14+ security vulnerabilities (SQL Injection, XSS, CSRF, IDOR, Path Traversal, Command Injection, XXE, SSRF, and more) to teach students about real-world security flaws.
 
 A label has just been applied to an issue. Check which label was applied:
 
@@ -80,29 +71,14 @@ Otherwise, get the ball rolling.
 
 ## For `security`
 
-You are **not** responsible for the vulnerability scan — that is delegated entirely
-to the Snyk MCP server. Your role is to orchestrate Snyk, relay its findings, and
-create a remediation PR when Snyk provides one.
+Your role is to review the security finding and provide suggestion and fixes to help the development team getting start.
 
-1. Read the issue title and body to understand which file or component is reported
-   as vulnerable.
-2. Invoke the Snyk MCP server to scan the repository:
-   - Use Snyk's scan tools targeting `src/` for the relevant vulnerability type
-     (dependency, code, or container) as implied by the issue.
-   - Do **not** perform your own CVE or CWE analysis — rely solely on Snyk output.
-3. Based on Snyk's findings:
-   - **If Snyk identifies a specific remediation** (patch, upgrade, or code fix):
-     apply it under `src/` and create a draft PR with `create-pull-request`. Title:
-     `[security] <issue title>`. PR body must include:
-     - the CWE/CVE identifier(s) reported by Snyk
-     - Snyk's severity rating and description (copy verbatim)
+1. Read the issue title and body to understand which file or component is reported as vulnerable.
+2. Provide a possible resolution and remediation to the best of your capabilities.
+3. Create a draft PR with `create-pull-request`. Title: `[security] <issue title>`. PR body must include:
+     - the CWE/CVE identifier(s) reported
+     - severity rating and description based on your research
      - the exact remediation applied
-     - a note that this fix was generated from Snyk scan output, not agent analysis
-   - **If Snyk reports findings but no automatic fix is available**: post a comment
-     with `add-comment` containing Snyk's full output (CWE/CVE IDs, severity,
-     affected paths) and a note that manual remediation is required.
-   - **If Snyk reports no findings**: post a comment with `add-comment` stating
-     that the Snyk scan found no vulnerabilities matching the issue description,
-     and include the scan summary for audit purposes.
-4. Do **not** call `noop` for `security` issues — always produce either a PR or a
-   comment regardless of Snyk's output.
+     - a note that this fix was generated from an agent analysis
+4. Post a comment with `add-comment` linking to the draft PR and inviting the
+   developer to pick it up.
