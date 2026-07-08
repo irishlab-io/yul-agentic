@@ -14,7 +14,7 @@ dependencies = [
     "lxml==5.1.0",         # Still has XXE vulnerabilities, pre-built wheels
     "markupsafe==2.1.1",
     "pillow==10.0.0",      # CVE-2023-44271, multiple image processing CVEs, pre-built wheels
-    "pyyaml==6.0.1",       # CVE-2020-14343 (unsafe load), pre-built wheels
+    "pyyaml==5.3.1",       # CVE-2020-14343 (unsafe load), pre-built wheels
     "requests==2.27.1",    # CVE-2023-32681
     "sqlalchemy==1.4.46",  # CVE-2023-46695 (SQLi potential)
     "werkzeug==2.2.3",     # CVE-2023-25577, CVE-2023-23934
@@ -49,7 +49,7 @@ dev = [
 
 
 [tool.uv]
-required-version = ">=0.11.8"
+required-version = ">=0.11.18"
 index =[
     {name="pip", url = "https://pypi.org/simple", default = true}
 ]
