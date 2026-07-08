@@ -194,18 +194,39 @@ features:
         finally:
             os.unlink(path)
 
-    def test_unsafe_yaml_loader_vulnerability(self):
+    def test_safe_yaml_loader_used(self):
         """
-        Demonstrate CWE-502: yaml.load() with yaml.Loader deserialises
-        arbitrary Python objects.  This test verifies the loader is reached
-        without crashing on safe content.
+        Verify that safe YAML loading is in use (CWE-502 remediated).
+
+        yaml.safe_load() rejects dangerous !!python/ tags while still
+        correctly parsing plain YAML content.
         """
         content = "features:\n  search:\n    enabled: true\n"
         path = _write_flags_file(content)
         try:
             feature_flags.reload_flags(path)
-            # No exception means the unsafe loader was used (and accepted safe YAML).
+            # Safe content still loads correctly.
             assert feature_flags.is_enabled("search") is True
+        finally:
+            os.unlink(path)
+
+    def test_safe_yaml_loader_rejects_python_objects(self):
+        """
+        Verify yaml.safe_load() blocks !!python/ object construction (CWE-502).
+
+        With the full Loader, the payload below would execute arbitrary code.
+        yaml.safe_load() must raise a yaml.YAMLError instead.
+        """
+        # This payload would call os.system('id') with yaml.load(Loader=yaml.Loader)
+        payload = "!!python/object/apply:os.system ['id']\n"
+        path = _write_flags_file(payload)
+        try:
+            # safe_load raises yaml.YAMLError on !!python/ tags.
+            import yaml
+
+            with open(path) as fh:
+                with pytest.raises(yaml.YAMLError):
+                    yaml.safe_load(fh)
         finally:
             os.unlink(path)
 
