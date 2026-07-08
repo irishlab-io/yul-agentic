@@ -194,18 +194,25 @@ features:
         finally:
             os.unlink(path)
 
-    def test_unsafe_yaml_loader_vulnerability(self):
+    @pytest.mark.security
+    def test_safe_yaml_loader_rejects_python_objects(self):
         """
-        Demonstrate CWE-502: yaml.load() with yaml.Loader deserialises
-        arbitrary Python objects.  This test verifies the loader is reached
-        without crashing on safe content.
+        Verify CVE-2020-14343 / CWE-502 remediation: yaml.safe_load() raises
+        an error when YAML contains Python-object tags such as
+        !!python/object/apply, preventing arbitrary code execution.
+
+        The module catches the parse error and falls back to defaults so the
+        application remains functional even when fed a malicious payload.
         """
-        content = "features:\n  search:\n    enabled: true\n"
-        path = _write_flags_file(content)
+        malicious_content = (
+            "!!python/object/apply:os.system\n"
+            "args: ['echo pwned']\n"
+        )
+        path = _write_flags_file(malicious_content)
         try:
             feature_flags.reload_flags(path)
-            # No exception means the unsafe loader was used (and accepted safe YAML).
-            assert feature_flags.is_enabled("search") is True
+            # Malicious YAML is rejected; module falls back to defaults.
+            assert feature_flags.is_enabled("todos", "read") is True
         finally:
             os.unlink(path)
 
