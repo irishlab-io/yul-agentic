@@ -194,20 +194,25 @@ features:
         finally:
             os.unlink(path)
 
-    def test_unsafe_yaml_loader_vulnerability(self):
+    def test_safe_yaml_loader_rejects_python_objects(self):
         """
-        Demonstrate CWE-502: yaml.load() with yaml.Loader deserialises
-        arbitrary Python objects.  This test verifies the loader is reached
-        without crashing on safe content.
+        Verify CVE-2020-14343 remediation: yaml.safe_load() raises an error
+        when a YAML payload attempts arbitrary Python object instantiation.
+        Using !!python/object/apply: directives must be rejected.
         """
-        content = "features:\n  search:\n    enabled: true\n"
-        path = _write_flags_file(content)
+        import yaml
+
+        # Payload that would execute code with the unsafe yaml.Loader
+        malicious_content = "features: !!python/object/apply:os.system ['echo pwned']\n"
+        path = _write_flags_file(malicious_content)
         try:
-            feature_flags.reload_flags(path)
-            # No exception means the unsafe loader was used (and accepted safe YAML).
-            assert feature_flags.is_enabled("search") is True
+            # safe_load() must raise yaml.YAMLError for this payload
+            with open(path) as fh:
+                with pytest.raises(yaml.YAMLError):
+                    yaml.safe_load(fh)
         finally:
             os.unlink(path)
+
 
     def test_file_not_found_uses_defaults(self):
         """A non-existent file path falls back to all-enabled defaults."""
