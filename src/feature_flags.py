@@ -1,17 +1,20 @@
 """
-DELIBERATELY VULNERABLE FEATURE FLAGS MODULE - FOR EDUCATIONAL PURPOSES ONLY
+FEATURE FLAGS MODULE - FOR EDUCATIONAL PURPOSES ONLY
 
 This module provides a simple feature flag system backed by a YAML file.
 Flags can be toggled on or off per-feature and per-sub-feature.  When no
 configuration file is supplied every feature is enabled by default.
 
-Vulnerabilities demonstrated (intentional, for learning):
-- CWE-502: Unsafe YAML deserialization via yaml.load() with full Loader
-            (allows arbitrary Python object instantiation / code execution)
+Intentional vulnerabilities retained for teaching (NOT the YAML loader):
 - CWE-284: Runtime feature-flag bypass exposed through a query parameter
 - CWE-200: All flag state disclosed to unauthenticated callers via the API
 - CWE-22:  Flag-file path accepted from an environment variable without
             any sanitisation (path traversal is possible)
+
+Security fix applied (Issue #36 / CVE-2020-14343):
+- CWE-502 was present: yaml.load() with full Loader allowed arbitrary Python
+  object instantiation / code execution.  Replaced with yaml.safe_load()
+  which only deserialises standard YAML scalars, mappings, and sequences.
 """
 
 import os
@@ -83,9 +86,6 @@ def load_flags(flags_file: Optional[str] = None) -> None:
 
     CWE-22: The file path is used as-is; an attacker who controls the
     FEATURE_FLAGS_FILE environment variable can read arbitrary files.
-    CWE-502: yaml.load() with Loader=yaml.Loader deserialises arbitrary
-    Python objects, enabling remote code execution if the YAML is attacker-
-    controlled.  Always use yaml.safe_load() in production code.
     """
     global _flags
 
@@ -99,11 +99,13 @@ def load_flags(flags_file: Optional[str] = None) -> None:
     if os.path.exists(flags_file):
         try:
             with open(flags_file, "r") as fh:
-                # VULNERABILITY: CWE-502 – yaml.load with the full Loader
-                # allows execution of arbitrary Python code embedded in the
-                # YAML file (e.g. !!python/object/apply:os.system ["cmd"]).
-                # Replace with yaml.safe_load(fh) in a real application.
-                loaded = yaml.load(fh, Loader=yaml.Loader)  # noqa: S506
+                # Secure: yaml.safe_load() only deserialises standard YAML types
+                # (scalars, mappings, sequences) and does NOT allow arbitrary
+                # Python object instantiation, preventing CWE-502 / CVE-2020-14343.
+                # Previously used yaml.load(fh, Loader=yaml.Loader) — do NOT
+                # revert to that; it enables remote code execution via payloads
+                # such as: !!python/object/apply:os.system ["rm -rf /"]
+                loaded = yaml.safe_load(fh)
 
             if loaded and isinstance(loaded, dict) and "features" in loaded:
                 _flags = loaded["features"]

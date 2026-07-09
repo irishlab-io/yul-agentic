@@ -11,9 +11,11 @@
 #   Set 'enabled: false' on a feature to disable it and all its sub-features.
 #   Set a sub-feature to 'false' to disable only that sub-feature.
 #
-# WARNING – intentional vulnerability in the loader (CWE-502):
-#   The YAML file is loaded with yaml.Loader (not yaml.safe_load).  Never
-#   include untrusted YAML in this file; it can execute arbitrary Python code.
+# Security note (CVE-2020-14343 fixed):
+#   The YAML loader was updated from yaml.load(Loader=yaml.Loader) to
+#   yaml.safe_load(), preventing arbitrary Python code execution via crafted
+#   YAML payloads (CWE-502).  Other intentional vulnerabilities remain for
+#   educational purposes (CWE-22, CWE-284, CWE-200).
 #
 # Example – disable admin command execution:
 #   admin:
