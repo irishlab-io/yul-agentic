@@ -12,7 +12,7 @@ description: 'Python coding conventions and guidelines'
 - Provide docstrings following PEP 257 conventions.
 - Use the `typing` module for type annotations (e.g., `List[str]`, `Dict[str, int]`).
 - Break down complex functions into smaller, more manageable functions.
-- This project uses Django; follow Django best practices for models, views, and templates.
+- This project uses Flask; follow Flask best practices for the application factory (`create_app()` in `src/__init__.py`), routes, and Jinja templates.
 - `uv` is the package manager; ensure dependencies are managed accordingly.
 - The `requirements.txt` file is used for scanning dependencies; keep the `pyproject.toml` updated using `uv`.
 
@@ -30,7 +30,7 @@ description: 'Python coding conventions and guidelines'
 
 - Follow the **PEP 8** style guide for Python.
 - Maintain proper indentation (use 4 spaces for each level of indentation).
-- Ensure lines do not exceed 79 characters.
+- Ensure lines do not exceed 88 characters (ruff's default — no `[tool.ruff]` section is configured in `pyproject.toml`).
 - Place function and class docstrings immediately after the `def` or `class` keyword.
 - Use blank lines to separate functions, classes, and code blocks where appropriate.
 
