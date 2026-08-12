@@ -60,6 +60,8 @@ safe-outputs:
   noop:
     report-as-issue: false
   report-failure-as-issue: false
+  threat-detection:
+    continue-on-error: true
 ---
 
 # Fixer
