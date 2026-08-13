@@ -15,10 +15,6 @@ on:
         description: "Issue to act on"
         required: true
         type: string
-      label:
-        description: "Path to run: enhancement or security. Leave empty to read it from the issue."
-        required: false
-        type: string
 
   roles:
     - admin
@@ -37,12 +33,6 @@ tools:
     toolsets:
       - default
 
-# This workflow writes code; it does not validate it. Linting, type checking and
-# the test suite are the CI pipeline's job (`.github/workflows/main.yml`), which
-# runs on the pull request this workflow opens.
-#
-# uv and PyPI access are still needed for one thing: regenerating `uv.lock` after
-# a dependency bump. That is part of producing the change, not verifying it.
 network:
   allowed:
     - defaults
@@ -72,9 +62,7 @@ safe-outputs:
     allowed-files:
       - "**"
       - "!.github/**"
-    # Dependency and SCA bumps are explicitly in scope for this workflow, and
-    # those are exactly the files gh-aw protects by default. Without this the
-    # only fix a security issue usually needs is the one flagged as protected.
+
     protected-files:
       policy: request_review
       exclude:
@@ -107,13 +95,12 @@ You orchestrate the resolution of a labelled GitHub issue for this project. When
 ## Context for this run
 
 - Issue: **#${{ github.event.issue.number || github.event.inputs.issue_number }}**
-- Manual-dispatch label input (empty on automatic runs): **${{ github.event.inputs.label }}**
 
-This workflow runs automatically when the `enhancement` or `security` label is applied to an issue, and manually via `workflow_dispatch` (with an issue number and label). If the issue title, body, and labels are not already provided to you (e.g. on a manual run), fetch them for this issue number using the GitHub tools before doing anything else.
+This workflow runs automatically when the `enhancement` or `security` label is applied to an issue, and manually via `workflow_dispatch` with an issue number. If the issue title, body, and labels are not already provided to you (e.g. on a manual run), fetch them for this issue number using the GitHub tools before doing anything else.
 
 ## What to do
 
-1. **Determine which path to run.** If the manual-dispatch label input above is set, use it. Otherwise fetch the issue's current labels and pick whichever of `enhancement` or `security` is present; if both are present, prefer `security`. Act on exactly that one label. If the applied label is neither `enhancement` nor `security`, call `noop` and stop.
+1. **Determine which path to run.** Read the issue's current labels and pick whichever of `enhancement` or `security` is present; if both are present, prefer `security`. Act on exactly that one label. If the issue carries neither, call `noop` and stop.
 
 2. **Delegate the implementation** to the **`software-engineer`** sub-agent, passing it the issue number, the chosen label, and the issue title/body. That agent owns the codebase grounding, the end-to-end fix-to-PR procedure, the pull-request quality bar, and the security-remediation rules. Dependency and SCA version bumps are in scope: when a security issue is fixed by upgrading a vulnerable pin, the fix is to edit `pyproject.toml` and regenerate the lock file.
 

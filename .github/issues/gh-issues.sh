@@ -14,7 +14,7 @@
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-ISSUE_DIR="$REPO_ROOT/.github/issues"
+ISSUE_DIR="$REPO_ROOT/issues"
 LABEL="agentic-workflows"
 
 # file|title
