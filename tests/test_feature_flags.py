@@ -194,17 +194,12 @@ features:
         finally:
             os.unlink(path)
 
-    def test_unsafe_yaml_loader_vulnerability(self):
-        """
-        Demonstrate CWE-502: yaml.load() with yaml.Loader deserialises
-        arbitrary Python objects.  This test verifies the loader is reached
-        without crashing on safe content.
-        """
-        content = "features:\n  search:\n    enabled: true\n"
+    def test_unsafe_yaml_tag_falls_back_to_defaults(self):
+        """Unsafe YAML tags are rejected and defaults remain in place."""
+        content = "features:\n  search: !!python/name:builtins.str\n"
         path = _write_flags_file(content)
         try:
             feature_flags.reload_flags(path)
-            # No exception means the unsafe loader was used (and accepted safe YAML).
             assert feature_flags.is_enabled("search") is True
         finally:
             os.unlink(path)
