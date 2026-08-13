@@ -54,6 +54,8 @@ Draft one short, friendly comment of two to five sentences that:
 - States the label(s) applied and, in one sentence, why.
 - Provides **initial guidance** to move the issue forward. If key information is missing — steps to reproduce, expected versus actual behaviour, version or environment, logs — politely ask for it. If it looks like a usage `question`, point toward the relevant file in `docs/` (`QUICKSTART.md`, `TESTING.md`, `EXPLOITS.md`).
 - Notes that a maintainer will review shortly if you applied `triage`.
+- Provide details about your findings and reasoning, but do not restate exploit details or give any guidance that could be used to exploit a vulnerability.
+- Comments and notes should be extensive enough to help a maintainer understand your reasoning, but **never promise a fix, a timeline, or any specific action** — you are triaging only.
 
 Never promise a fix, a timeline, or any specific action — you are triaging only.
 
