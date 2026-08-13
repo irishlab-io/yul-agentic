@@ -36,7 +36,7 @@ tools:
 permissions:
   contents: read
   issues: read
-  pull-requests: read
+  pull-requests: write
 
 safe-outputs:
   add-comment:
