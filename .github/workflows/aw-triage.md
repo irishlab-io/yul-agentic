@@ -14,7 +14,7 @@ on:
         required: true
         type: string
 
-model: gpt-5-mini
+model: gpt-5.4-mini
 engine:
   id: copilot
 timeout-minutes: 15
