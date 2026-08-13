@@ -32,7 +32,7 @@ execnet==2.1.2
 faker==40.19.1
 filelock==3.29.0
     # via virtualenv
-flask==2.2.5
+flask==3.0.3
     # via
     #   pytest-flask
     #   vulnerable-todo-app
@@ -132,7 +132,7 @@ urllib3==1.26.20
     # via requests
 virtualenv==20.39.1
     # via pre-commit
-werkzeug==2.2.3
+werkzeug==3.0.3
     # via
     #   flask
     #   pytest-flask

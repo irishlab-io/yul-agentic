@@ -29,7 +29,7 @@ PASSWORD_HASH_ALGORITHM = "md5"
 
 # CWE-489: Debug mode enabled in production
 # Debug mode exposes sensitive information and provides interactive debugger
-DEBUG = True
+DEBUG = os.getenv("DEBUG", "false").lower() in {"1", "true", "yes", "on"}
 
 # Security settings (all disabled for vulnerability demonstration)
 CSRF_ENABLED = False  # CWE-352: No CSRF protection

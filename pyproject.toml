@@ -8,7 +8,7 @@ dependencies = [
     # Using newer but still vulnerable versions compatible with Python 3.11-3.13 with binary wheels
     "click==8.0.4",
     "cryptography==38.0.4", # Still has some known issues
-    "flask==2.2.5",        # CVE-2023-30861 (path traversal), CVE-2023-25577
+    "flask==3.0.3",        # Fixed Werkzeug compatibility and security updates
     "itsdangerous==2.0.1", # Timing attack vulnerabilities
     "jinja2==3.0.3",       # CVE-2024-22195, CVE-2024-34064
     "lxml==5.1.0",         # Still has XXE vulnerabilities, pre-built wheels
@@ -17,7 +17,7 @@ dependencies = [
     "pyyaml==5.3.1",       # CVE-2020-14343 (unsafe load), pre-built wheels
     "requests==2.27.1",    # CVE-2023-32681
     "sqlalchemy==1.4.46",  # CVE-2023-46695 (SQLi potential)
-    "werkzeug==2.2.3",     # CVE-2023-25577, CVE-2023-23934
+    "werkzeug==3.0.3",     # CVE-2024-34069 and related debugger fixes
 ]
 
 

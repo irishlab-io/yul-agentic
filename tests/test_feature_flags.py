@@ -427,6 +427,26 @@ class TestApiFeaturesEndpoint:
             assert search_cfg is False
 
 
+class TestDebugConfiguration:
+    """Debug mode should be opt-in rather than hardcoded on."""
+
+    def test_debug_defaults_to_disabled(self):
+        """DEBUG is off unless explicitly enabled through the environment."""
+        from src import config
+
+        assert config.DEBUG is False
+
+    def test_debug_can_be_enabled_via_environment(self, monkeypatch):
+        """The DEBUG environment variable can opt into debug mode."""
+        monkeypatch.setenv("DEBUG", "true")
+
+        import importlib
+        from src import config
+
+        reloaded = importlib.reload(config)
+        assert reloaded.DEBUG is True
+
+
 # ---------------------------------------------------------------------------
 # Tests: query-parameter override (CWE-284 vulnerability)
 # ---------------------------------------------------------------------------
