@@ -83,7 +83,6 @@ This workflow runs automatically when an issue is opened or reopened, and manual
 3. **Apply the labels** the analyst determined, with `add-labels`:
    - Always apply `agentic-workflows`.
    - Apply exactly one category label: `bug`, `documentation`, `enhancement`, `question`, `security`, or `triage`.
-   - If the category is `security`, also apply exactly one `severity:*` label.
 
 4. **Post one comment** with `add-comment`, using the comment the analyst drafted.
 

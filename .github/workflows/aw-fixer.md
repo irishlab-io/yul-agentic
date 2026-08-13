@@ -15,13 +15,7 @@ on:
         description: "Issue to act on"
         required: true
         type: string
-      label:
-        description: "Which path to run (enhancement or security)"
-        required: true
-        type: choice
-        options:
-          - enhancement
-          - security
+
   roles:
     - admin
     - maintainer

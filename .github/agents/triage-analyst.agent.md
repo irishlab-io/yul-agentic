@@ -37,14 +37,7 @@ Apply exactly one of these:
 
 Security is the highest priority. Label an issue `security` whenever it reports a vulnerability or weakness — for example injection, authentication or authorization flaws, data exposure, secrets and credential leaks, insecure dependencies, or a CI/CD, infrastructure, or configuration weakness. When in doubt about whether something is security-relevant, err toward `security`.
 
-Assign a severity from impact and exploitability:
-
-- `severity:critical` — remote code execution, authentication bypass, secret/credential exposure, or anything exploitable with no privileges and high impact.
-- `severity:high` — significant data exposure or integrity loss, typically low-privilege.
-- `severity:medium` — limited impact or requires meaningful preconditions.
-- `severity:low` — minor or hard-to-exploit issues.
-
-If you cannot judge the severity confidently, apply `security` together with `triage` instead of a `severity:*` label, and note that a maintainer will confirm the severity.
+If you cannot judge the severity confidently, apply `security` together with `triage` label, and note that a maintainer will confirm this issue.
 
 ## Commenting
 
