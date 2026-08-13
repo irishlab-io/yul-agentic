@@ -37,10 +37,7 @@ The repository already has `agentic-workflows` (plural). That is **not** the sam
 ## File the issue
 
 ```bash
-gh issue create \
-  --title "[security] pyyaml 5.3.1 is vulnerable to CVE-2020-14343" \
-  --body-file .github/issues/pyyaml-report.md \
-  --label agentic-workflows
+gh issue create --title "[security] pyyaml 5.3.1 is vulnerable" --body-file .github/issues/pyyaml-report.md --label agentic-workflows
 ```
 
 Confirm it landed:
