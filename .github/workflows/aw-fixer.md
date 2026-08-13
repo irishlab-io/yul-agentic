@@ -50,7 +50,7 @@ safe-outputs:
   create-pull-request:
     branch-prefix: "ai/"
     labels:
-      - agentic-workflow
+      - agentic-workflows
       - needs-review
     draft: true
     auto-close-issue: false

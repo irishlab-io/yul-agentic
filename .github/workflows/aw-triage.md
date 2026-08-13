@@ -36,7 +36,7 @@ safe-outputs:
   add-labels:
     target: "*"
     allowed:
-      - agentic-workflow
+      - agentic-workflows
       - bug
       - documentation
       - enhancement
@@ -81,7 +81,7 @@ This workflow runs automatically when an issue is opened or reopened, and manual
 2. **Decide whether the issue has real content.** If the body is empty, spam, or an obvious test post with no actionable content, call `noop` and stop — do not label or comment.
 
 3. **Apply the labels** the analyst determined, with `add-labels`:
-   - Always apply `agentic-workflow`.
+   - Always apply `agentic-workflows`.
    - Apply exactly one category label: `bug`, `documentation`, `enhancement`, `question`, `security`, or `triage`.
    - If the category is `security`, also apply exactly one `severity:*` label.
 
