@@ -8,6 +8,7 @@ import os
 import subprocess
 import hashlib
 import pickle
+import secrets
 import requests
 import xml.etree.ElementTree as ET
 from xml.etree.ElementTree import XMLParser
@@ -159,14 +160,11 @@ def generate_session_token(user_id):
     """
     CWE-330: Use of Insufficiently Random Values
 
-    Generates predictable session tokens.
-    Should use cryptographically secure random generator.
+    Generates a cryptographically secure session token.
     """
-    # VULNERABILITY: Predictable token generation using MD5 of user_id
-    import time
-
-    token_string = f"{user_id}_{time.time()}"
-    return hashlib.md5(token_string.encode()).hexdigest()
+    # Keep the user_id parameter for API compatibility, but do not derive
+    # the token from it.
+    return secrets.token_hex(32)
 
 
 def check_file_checksum(filename, checksum_type="md5"):

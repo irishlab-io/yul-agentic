@@ -108,6 +108,7 @@ class TestAuthentication:
 class TestSessionManagement:
     """Test session management functions."""
 
+    @pytest.mark.unit
     def test_create_session(self, app):
         """Test session creation."""
         with app.app_context():
@@ -119,6 +120,20 @@ class TestSessionManagement:
             assert 'session_token' in result
             assert result['session_token'] is not None
 
+    @pytest.mark.unit
+    def test_logout_invalidates_session(self, app):
+        """Test logout removes the session record."""
+        with app.app_context():
+            auth.register_user('logouthelper', 'password123')
+            auth_result = auth.authenticate_user('logouthelper', 'password123')
+            token = auth_result['session_token']
+
+            result = auth.logout(token)
+
+            assert result['success'] is True
+            assert auth.get_session_user(token) is None
+
+    @pytest.mark.unit
     def test_get_session_user(self, app, client):
         """Test getting user from session."""
         with app.app_context():
@@ -132,6 +147,7 @@ class TestSessionManagement:
             assert user is not None
             assert user['username'] == 'sessionuser2'
 
+    @pytest.mark.unit
     def test_logout_user(self, app):
         """Test user logout."""
         with app.app_context():

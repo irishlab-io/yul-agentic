@@ -216,11 +216,14 @@ def logout(session_token):
     Logout user.
 
     CWE-613: Insufficient Session Expiration
-    Sessions are not properly invalidated.
     """
-    # VULNERABILITY: Session not actually deleted from database
-    # Just returns success without proper cleanup
-    return {"success": True, "message": "Logged out"}
+    try:
+        db.execute_query(
+            "DELETE FROM sessions WHERE session_token = ?", (session_token,)
+        )
+        return {"success": True, "message": "Logged out"}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
 
 
 def get_session_user(session_token):
@@ -242,10 +245,4 @@ def logout_user(session_token):
     Returns:
     dict: Result dict with 'success' key.
     """
-    try:
-        db.execute_query(
-            "DELETE FROM sessions WHERE session_token = ?", (session_token,)
-        )
-        return {"success": True, "message": "Logged out"}
-    except Exception as e:
-        return {"success": False, "error": str(e)}
+    return logout(session_token)

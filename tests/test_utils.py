@@ -46,6 +46,7 @@ class TestPasswordHashing:
 class TestSessionToken:
     """Test session token generation."""
 
+    @pytest.mark.unit
     def test_generate_session_token(self):
         """Test session token generation."""
         user_id = 123
@@ -54,17 +55,18 @@ class TestSessionToken:
         assert token is not None
         assert len(token) > 0
 
-    def test_generate_session_token_predictability(self):
-        """Test that session tokens are predictable (vulnerability)."""
-        # This demonstrates the vulnerability
+    @pytest.mark.unit
+    def test_generate_session_token_is_not_time_based(self, monkeypatch):
+        """Test that session tokens do not depend on the clock."""
+        monkeypatch.setattr("time.time", lambda: 1234567890.0)
+
         user_id = 456
         token1 = utils.generate_session_token(user_id)
         token2 = utils.generate_session_token(user_id)
 
-        # Tokens should be different but predictable based on timestamp
-        # (This is a vulnerability demonstration)
-        assert token1 is not None
-        assert token2 is not None
+        assert token1 != token2
+        assert len(token1) == 64
+        assert len(token2) == 64
 
 
 class TestSerialization:
