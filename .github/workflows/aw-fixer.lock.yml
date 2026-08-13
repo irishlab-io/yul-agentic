@@ -40,7 +40,7 @@
 #   - actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0 (source v9)
 #   - actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
 #   - actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-#   - astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # 08807647e7069bb48b6ef5acd8ec9567f424441b
+#   - astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # 08807647e7069bb48b6ef5acd8ec9567f424441b
 #   - github/gh-aw-actions/setup@2709137ea6c5b0e19aa621454dc643ea8dc526b1 # v0.85.4
 #
 # Container images used:
@@ -509,7 +509,7 @@ jobs:
           name: activation
           path: /tmp/gh-aw
       - name: Install UV
-        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # 08807647e7069bb48b6ef5acd8ec9567f424441b
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # 08807647e7069bb48b6ef5acd8ec9567f424441b
         with:
           cache-dependency-glob: uv.lock
           enable-cache: true
