@@ -90,19 +90,21 @@ class TestAuthentication:
 
             assert result['success'] is False
 
-    def test_authenticate_sql_injection_vulnerability(self, app):
-        """Test that the SQL injection weakness is still present (open backlog item)."""
+    def test_authenticate_sql_injection_is_not_a_bypass(self, app):
+        """Test that SQL injection does not bypass authentication."""
         with app.app_context():
             # Register a user
             auth.register_user('victim', 'password123')
 
             # Try SQL injection bypass: ' OR '1'='1
-            # This should succeed due to the vulnerability
             result = auth.authenticate_user("victim' OR '1'='1'--", 'anything')
 
-            # The vulnerability allows this to succeed
-            # In a secure app, this should fail
-            assert result is not None  # Just checking it doesn't crash
+            assert result['success'] is False
+            assert 'invalid credentials' in result['error'].lower()
+
+            # Normal authentication still works.
+            legitimate = auth.authenticate_user('victim', 'password123')
+            assert legitimate['success'] is True
 
 
 class TestSessionManagement:
