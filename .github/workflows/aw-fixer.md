@@ -15,6 +15,10 @@ on:
         description: "Issue to act on"
         required: true
         type: string
+      label:
+        description: "Path to run: enhancement or security. Leave empty to read it from the issue."
+        required: false
+        type: string
 
   roles:
     - admin
@@ -33,24 +37,51 @@ tools:
     toolsets:
       - default
 
+# This workflow writes code; it does not validate it. Linting, type checking and
+# the test suite are the CI pipeline's job (`.github/workflows/main.yml`), which
+# runs on the pull request this workflow opens.
+#
+# uv and PyPI access are still needed for one thing: regenerating `uv.lock` after
+# a dependency bump. That is part of producing the change, not verifying it.
+network:
+  allowed:
+    - defaults
+    - python
+
+steps:
+  - name: Install UV
+    uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+    with:
+      enable-cache: true
+      cache-dependency-glob: "uv.lock"
+
 permissions:
   contents: read
   issues: read
-  pull-requests: write
+  pull-requests: read
 
 safe-outputs:
   add-comment:
     max: 1
   create-pull-request:
-    branch-prefix: "ai/"
+    title-prefix: "[aw]: "
+    branch-prefix: "aw/"
     labels:
       - agentic-workflows
       - needs-review
-    draft: true
-    auto-close-issue: false
     allowed-files:
       - "**"
       - "!.github/**"
+    # Dependency and SCA bumps are explicitly in scope for this workflow, and
+    # those are exactly the files gh-aw protects by default. Without this the
+    # only fix a security issue usually needs is the one flagged as protected.
+    protected-files:
+      policy: request_review
+      exclude:
+        - pyproject.toml
+        - uv.lock
+        - requirements.txt
+    if-no-changes: error
   noop:
     report-as-issue: false
   report-failure-as-issue: false
@@ -69,7 +100,9 @@ safe-outputs:
 
 # Fixer
 
-You orchestrate the resolution of a labelled GitHub issue for this project. When triggered, you produce a real, tested code change in a detailed draft pull request — never a stub, placeholder, or documentation-only diff. You do this by delegating the engineering work to the `software-engineer` sub-agent, which carries this repository's layout, commands, conventions, and fix-to-PR procedure.
+You orchestrate the resolution of a labelled GitHub issue for this project. When triggered, you produce a real code change in a detailed draft pull request — never a stub, placeholder, or documentation-only diff. You do this by delegating the engineering work to the `software-engineer` sub-agent, which carries this repository's layout, conventions, and fix-to-PR procedure.
+
+**Your job is to write the change, not to validate it.** Do not run the linter, the type checker, or the test suite, and do not treat their absence as a problem. The CI pipeline in `.github/workflows/main.yml` runs `ruff`, `ty` and the full `pytest` suite against the pull request you open, and that is where a broken change gets caught. Spend your time on a correct, well-scoped diff instead.
 
 ## Context for this run
 
@@ -86,7 +119,17 @@ This workflow runs automatically when the `enhancement` or `security` label is a
 
 3. **On the `security` path, review before publishing.** Have the **`security-reviewer`** sub-agent review the resulting diff, and include its verdict in the PR body. If it reports a weakness introduced by the change, an incomplete remediation that leaves an exploitable path, or a regression of something already fixed, send the change back to the `software-engineer` rather than opening the PR.
 
-4. **Finish** by ensuring a draft PR was created via `create-pull-request` and a single comment posted via `add-comment` linking to it and inviting a reviewer. Before creating a PR, confirm no open `ai/`-prefixed PR already exists for this issue; if one does, comment a link to it instead of opening a duplicate, then stop.
+4. **Finish** by calling the **`create_pull_request`** tool on the `safeoutputs` MCP server, then posting a single comment via `add_comment` linking to the PR and inviting a reviewer. Before creating a PR, confirm no open `aw/`-prefixed PR already exists for this issue; if one does, comment a link to it instead of opening a duplicate, then stop.
+
+## Opening the pull request
+
+`create_pull_request` on the `safeoutputs` server is the **only** mechanism for opening a PR here, and it is always available to you. Read these before you finish:
+
+- **There is no GitHub write API in this session, and there is not meant to be.** `gh pr create`, the GitHub MCP write tools, and `git push` are all unavailable by design — the workflow holds `pull-requests: read` and the framework does the writing for you. Their absence is **never** a reason to skip the PR. If you catch yourself concluding "the required GitHub write tool is unavailable", you are looking at the wrong tool: use `safeoutputs create_pull_request`.
+- Follow the framework's sequence exactly: make the edits, `git checkout -b <branch>`, commit, **do not push**, then call `create_pull_request` with `branch` set to the output of `git branch --show-current`.
+- **`noop` is not a fallback for a difficult run.** It is permitted for exactly two situations: the applied label is neither `enhancement` nor `security`, or an open PR for this issue already exists. Nothing else.
+- **A missing tool is not a stop condition.** This environment has no test runner and no linter, by design. If some command you tried is unavailable or fails, that is expected — write the change, note anything you are unsure about in the PR body, and open the PR. Silently ending with `noop` after writing a real fix is a failed run: the work is lost when the runner is torn down.
+- The one case where you withhold the PR is a `security-reviewer` verdict of an introduced weakness, an incomplete remediation, or a regression. Then you send the change back to the `software-engineer` and iterate — you do not stop.
 
 ## Guardrails
 
