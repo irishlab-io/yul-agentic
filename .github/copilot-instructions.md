@@ -1,6 +1,6 @@
 # Copilot Instructions — vulnerable-todo-app
 
-This is a **deliberately vulnerable Flask** TODO application used in a cybersecurity academy context. Its weaknesses are the curriculum, not defects. Never deploy it, and never "harden" it casually.
+This is a **Flask** TODO application carrying a large backlog of known security weaknesses, which are actively being remediated through this repository's issue and agentic-workflow pipeline.
 
 ## Commands
 
@@ -57,14 +57,6 @@ Python `>=3.11`, managed with `uv` (`required-version >=0.11.18`). PEP 8 with **
 
 Commit messages must follow **Conventional Commits** (`feat:`, `fix:`, `chore:`, etc.) — enforced by commitizen via pre-commit on the `commit-msg` hook.
 
-## The vulnerabilities are intentional
-
-`docs/VULNERABILITIES.md` catalogues 16 intentional weaknesses by CWE, with their exact code locations — SQL injection (CWE-89), XSS (CWE-79), CSRF (CWE-352), IDOR (CWE-639), path traversal (CWE-22), OS command injection (CWE-78), XXE (CWE-611), SSRF (CWE-918), insecure deserialization (CWE-502), hardcoded credentials (CWE-798), weak cryptography (CWE-327), information disclosure (CWE-200), missing authentication (CWE-306), unrestricted file upload (CWE-434), container security issues, and vulnerable dependencies. The pinned dependency versions in `pyproject.toml` carry known CVEs on purpose.
-
-**Read `docs/VULNERABILITIES.md` before changing security-relevant code.** Removing or weakening a documented teaching vulnerability without being asked to destroys the exercise. Say so and stop rather than doing it silently.
-
-Related docs: `docs/QUICKSTART.md`, `docs/TESTING.md`, `docs/EXPLOITS.md`.
-
 ---
 
 ## AI Agentic Workflows
@@ -80,9 +72,9 @@ Each workflow delegates its real work to a sub-agent in `.github/agents/`:
 
 | Agent | Role |
 |-------|------|
-| `triage-analyst.agent.md` | Owns the category taxonomy, severity scale, intentional-vulnerability rules, and reporter-facing comment guidance |
+| `triage-analyst.agent.md` | Owns the category taxonomy, severity scale, and reporter-facing comment guidance |
 | `software-engineer.agent.md` | Owns codebase grounding, the fix-to-PR procedure, the PR quality bar, and security-remediation rules |
-| `security-reviewer.agent.md` | Reviews diffs, separating intentional vulnerabilities from unintended weaknesses and curriculum damage |
+| `security-reviewer.agent.md` | Reviews diffs for weaknesses introduced by the change, incomplete remediations, and regressions |
 
 The `security-reviewer` is also invocable directly from Copilot CLI or VS Code for ad-hoc reviews.
 
@@ -94,5 +86,4 @@ All AI-generated PRs open as **drafts**, labelled `agentic-workflow` + `needs-re
 
 1. Read every changed line — do not assume the agent is correct
 2. Run `make test` to verify no regressions and that coverage holds at ≥75%
-3. Check that no intentional vulnerability was accidentally removed (`docs/VULNERABILITIES.md`)
-4. Mark the PR **Ready for Review** and merge only after CI passes and a human approves
+3. Mark the PR **Ready for Review** and merge only after CI passes and a human approves

@@ -435,7 +435,7 @@ class TestApiFeaturesEndpoint:
 class TestQueryParameterOverride:
     """
     The ?override_flag= query parameter bypasses disabled feature flags.
-    This is an intentional CWE-284 vulnerability for educational purposes.
+    This is an open CWE-284 weakness.
     """
 
     def test_override_reenables_disabled_login(self, feature_flag_client):

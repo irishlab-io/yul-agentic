@@ -1,11 +1,11 @@
 """
-DELIBERATELY VULNERABLE FEATURE FLAGS MODULE - FOR EDUCATIONAL PURPOSES ONLY
+FEATURE FLAGS MODULE
 
 This module provides a simple feature flag system backed by a YAML file.
 Flags can be toggled on or off per-feature and per-sub-feature.  When no
 configuration file is supplied every feature is enabled by default.
 
-Vulnerabilities demonstrated (intentional, for learning):
+Open weaknesses:
 - CWE-502: Unsafe YAML deserialization via yaml.load() with full Loader
             (allows arbitrary Python object instantiation / code execution)
 - CWE-284: Runtime feature-flag bypass exposed through a query parameter
@@ -168,9 +168,9 @@ def get_all_flags() -> Dict[str, Any]:
     """
     Return all feature flags and their current values.
 
-    CWE-200: This function is intentionally called by an unauthenticated
-    API endpoint (/api/features) that exposes the entire flag configuration
-    to any caller.  Restrict this to administrators in production code.
+    CWE-200: This function is called by an unauthenticated API endpoint
+    (/api/features) that exposes the entire flag configuration to any
+    caller.  It should be restricted to administrators.
 
     Returns:
     Dict[str, Any]: Shallow copy of the current flag store.

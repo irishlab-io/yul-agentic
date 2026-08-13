@@ -1,8 +1,8 @@
 # QUICK START GUIDE
 
-## ⚠️ WARNING: DELIBERATELY VULNERABLE APPLICATION
+## ⚠️ WARNING: THIS APPLICATION IS CURRENTLY VULNERABLE
 
-This application is **intentionally insecure** for educational purposes only!
+It carries a backlog of known, unremediated security weaknesses — see `docs/VULNERABILITIES.md`.
 
 ---
 
@@ -44,8 +44,8 @@ docker-compose up --build
 # Access at http://localhost:8000
 ```
 
-**Note:** The Docker configuration is intentionally insecure to demonstrate container
-security issues!
+**Note:** The Docker configuration is currently insecure — the container issues are open
+items in the remediation backlog.
 
 ---
 

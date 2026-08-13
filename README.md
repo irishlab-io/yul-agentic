@@ -1,23 +1,18 @@
-# ⚠️ DELIBERATELY VULNERABLE TODO APPLICATION ⚠️
+# TODO APPLICATION — SECURITY REMEDIATION BACKLOG
 
-**FOR EDUCATIONAL PURPOSES ONLY - DO NOT USE IN PRODUCTION**
+This is a Flask web application carrying a large backlog of known security weaknesses, representing OWASP Top 10 categories and various CWEs (Common Weakness Enumerations). They are being remediated issue by issue through this repository's agentic workflow pipeline.
 
-This is an intentionally insecure web application designed to teach cybersecurity students about common vulnerabilities and secure coding practices. The application contains multiple real-world security vulnerabilities representing OWASP Top 10 and various CWEs (Common Weakness Enumerations).
+## 🚨 CURRENT STATE 🚨
 
-## 🚨 WARNING 🚨
+**THIS APPLICATION IS CURRENTLY VULNERABLE — REMEDIATION IS IN PROGRESS.**
 
-**THIS APPLICATION IS DELIBERATELY VULNERABLE!**
+- ✅ **DO** work through [VULNERABILITIES.md](docs/VULNERABILITIES.md) — it is the remediation backlog
+- ✅ **DO** open an issue for any weakness you find, catalogued or not
+- ✅ **DO** run it in an isolated environment (local VM, air-gapped network) while weaknesses remain open
 
-- ❌ **DO NOT** deploy this application to production
-- ❌ **DO NOT** expose it to the internet
-- ❌ **DO NOT** use any code from this project in real applications
-- ✅ **DO** use only in isolated learning environments (local VM, air-gapped network)
-- ✅ **DO** learn from the vulnerabilities and their mitigations
-- ✅ **DO** understand why each vulnerability is dangerous
+## 📚 Scope of the backlog
 
-## 📚 Educational Purpose
-
-This application demonstrates:
+The open weaknesses cover:
 - **14+ types of vulnerabilities** including SQL Injection, XSS, CSRF, IDOR, Path Traversal, Command Injection, XXE, SSRF, and more
 - **Vulnerable dependencies** using outdated packages with known CVEs
 - **Insecure Docker configuration** with multiple container security issues
@@ -26,7 +21,7 @@ This application demonstrates:
 ## 🎯 Features
 
 The vulnerable todo list application includes:
-- User registration and authentication (with intentional weaknesses)
+- User registration and authentication (currently weak — see the backlog)
 - Create, read, update, and delete todos
 - Share todos with other users
 - File upload and download
@@ -37,7 +32,7 @@ The vulnerable todo list application includes:
 
 ## 🔧 Prerequisites
 
-- Python 3.11+ (using pre-release version for educational demonstration)
+- Python 3.11+ (currently pinned to a pre-release version — an open item in the backlog)
 - `uv` package manager
 - Docker and Docker Compose (for containerized deployment)
 
@@ -72,7 +67,7 @@ The vulnerable todo list application includes:
 
 ### Docker Deployment
 
-**WARNING**: The Dockerfile is intentionally insecure for educational purposes.
+**WARNING**: The Dockerfile is currently insecure — see the container items in the backlog.
 
 ```bash
 # Build and run with Docker Compose
@@ -81,9 +76,9 @@ docker-compose up --build
 # Access at http://localhost:8000
 ```
 
-## 🐛 Intentional Vulnerabilities
+## 🐛 Open Weaknesses
 
-This application demonstrates the following vulnerabilities (see [VULNERABILITIES.md](VULNERABILITIES.md) for detailed documentation):
+The following weaknesses are currently open (see [VULNERABILITIES.md](docs/VULNERABILITIES.md) for full detail, including how to fix each one):
 
 ### Application-Level Vulnerabilities
 
@@ -104,7 +99,7 @@ This application demonstrates the following vulnerabilities (see [VULNERABILITIE
 
 ### Dependency Vulnerabilities
 
-Using intentionally outdated packages:
+Currently pinned to outdated packages:
 - Flask 2.2.5 (CVE-2023-30861, CVE-2023-25577)
 - SQLAlchemy 1.4.46 (CVE-2023-46695)
 - Jinja2 3.0.3 (CVE-2024-22195)
@@ -122,15 +117,15 @@ Using intentionally outdated packages:
 - No resource limits
 - Overly permissive file permissions
 
-## 🎓 Learning Exercises
+## 🎓 Working the Backlog
 
-### For Students
+### Remediation loop
 
-1. **Identify**: Find all intentional vulnerabilities in the code
-2. **Exploit**: Try to exploit each vulnerability (in safe environment only!)
-3. **Understand**: Read the comments explaining why each is dangerous
-4. **Fix**: Practice fixing the vulnerabilities (create secure versions)
-5. **Test**: Verify fixes work without breaking functionality
+1. **Identify**: Pick a weakness from the backlog, or find one not yet catalogued
+2. **Reproduce**: Confirm it is exploitable (in an isolated environment only!)
+3. **Understand**: Read the `# VULNERABILITY:` markers and surrounding code to size the blast radius
+4. **Fix**: Remediate it, leaving no equivalent bypass beside it
+5. **Test**: Verify the fix holds and nothing else broke
 
 ### Suggested Exercises
 
@@ -238,23 +233,23 @@ Each vulnerability should be tested to ensure it's actually exploitable:
 
 ## 📝 License
 
-This educational project is provided as-is for learning purposes. See LICENSE file for details.
+This project is provided as-is. See LICENSE file for details.
 
 ## 🤝 Contributing
 
-This is an educational project. If you find additional vulnerabilities that should be included, or have suggestions for teaching improvements, please open an issue or pull request.
+If you find a weakness that is not yet catalogued, or want to take on an open backlog item, please open an issue or pull request.
 
 ## ⚖️ Legal and Ethical Disclaimer
 
-- This software is for **educational purposes only**
-- Only use in **isolated, controlled environments**
+- This software has known, unremediated weaknesses
+- Only run it in **isolated, controlled environments**
 - Never use against systems you don't own or have permission to test
 - The authors are not responsible for misuse of this software
 - Understand the legal implications of security testing in your jurisdiction
 
 ## 📞 Contact
 
-For questions about this educational project, please open an issue in the repository.
+For questions about this project, please open an issue in the repository.
 
 ---
 

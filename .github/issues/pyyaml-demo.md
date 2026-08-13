@@ -14,11 +14,11 @@ A vulnerability was discovered in the PyYAML library in versions before 5.4, whe
 
 `pyproject.toml` pins `pyyaml==5.3.1`, which is below the fixed 5.4 and therefore in range.
 
-The pin is deliberate — this is a teaching repository and its outdated dependencies are part of the curriculum. Filing the finding anyway *is* the exercise: it is a realistic SCA result, and it exercises the full triage-to-fixer chain.
+This is a realistic SCA result and an open item in the remediation backlog, so it exercises the full triage-to-fixer chain end to end.
 
 Note that `docs/VULNERABILITIES.md` §16 is out of date on this row. It lists PyYAML **3.12** with CVE-2017-18342 and CVE-2019-20477, which does not match the version actually pinned in `pyproject.toml`.
 
-Scope: this report covers the **dependency** only. The `yaml.load(fh, Loader=yaml.Loader)` call in `src/feature_flags.py` is a separate, already-documented intentional vulnerability (CWE-502, `docs/VULNERABILITIES.md`) and is not part of this finding.
+Scope: this report covers the **dependency** only. The `yaml.load(fh, Loader=yaml.Loader)` call in `src/feature_flags.py` is a separate, already-catalogued weakness (CWE-502, `docs/VULNERABILITIES.md`) and is not part of this finding.
 
 ## Prerequisites — create the missing labels
 
@@ -50,4 +50,4 @@ gh issue view <number> --web
 
 1. **`AW - Triage`** fires on `issues: opened` and delegates to the `triage-analyst` agent. Expect the `security` and `severity:critical` labels, plus one short guidance comment. The comment should stay generic — responsible disclosure means it will not restate exploit detail.
 2. Applying `security` triggers **`AW - Fixer`**, which delegates to the `software-engineer` agent.
-3. **Expected outcome: the fixer defers to Dependabot.** Dependency and SCA version bumps are explicitly out of its scope (see `.github/agents/software-engineer.agent.md`), so it should comment saying so rather than editing the pin. A draft PR that edits `pyyaml==5.3.1` directly is the wrong result and means the rule is not landing.
+3. **Expected outcome: a draft PR that bumps the pin.** Dependency and SCA version bumps are in scope (see `.github/agents/software-engineer.agent.md`), so the fixer should edit `pyyaml==5.3.1` in `pyproject.toml`, regenerate `uv.lock`, run the suite, and open a draft `ai/`-prefixed PR with the `security-reviewer` verdict in the body. A comment deferring to Dependabot is the wrong result.

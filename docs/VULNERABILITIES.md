@@ -1,8 +1,8 @@
 # VULNERABILITIES DOCUMENTATION
 
-**DELIBERATELY VULNERABLE TODO APPLICATION - EDUCATIONAL REFERENCE**
+**KNOWN WEAKNESSES — REMEDIATION BACKLOG**
 
-This document provides detailed information about each intentional vulnerability in the application, including:
+This document is the inventory of known security weaknesses in the application. Every entry is open work: use it to locate a weakness, understand its impact, and fix it. Each entry records:
 
 - CWE reference number
 
@@ -1289,8 +1289,8 @@ This application demonstrates **50+ individual security issues** across multiple
 
 - **7+ vulnerable dependencies** with known CVEs
 
-**Remember:** These vulnerabilities are intentional for educational purposes.
-In real applications, follow security best practices and keep dependencies updated!
+**Remember:** Every entry above is open remediation work. As weaknesses are fixed,
+update this document so it stays an accurate picture of what remains.
 
 ---
 

@@ -544,12 +544,10 @@ if __name__ == "__main__":
 
 ## ⚠️ FINAL REMINDER
 
-**This application is DELIBERATELY VULNERABLE for educational purposes!**
+**This application has known, unremediated weaknesses — remediation is in progress.**
 
-- Only use in isolated, safe environments
-- Never expose to the internet
-- Never use in production
+- Only run it in isolated environments while weaknesses remain open
+- Do not expose it to the internet until the backlog is closed
 - Understand legal and ethical boundaries
-- Learn responsibly
 
-**Happy Learning! 🎓🔒**
+**Happy fixing! 🔧🔒**

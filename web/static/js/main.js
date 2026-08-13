@@ -1,15 +1,15 @@
 /*
-DELIBERATELY VULNERABLE JAVASCRIPT - FOR EDUCATIONAL PURPOSES ONLY
+CLIENT-SIDE JAVASCRIPT
 
-This file demonstrates various client-side vulnerabilities.
+This file currently carries various client-side weaknesses.
 */
 
 // CWE-79: Potential DOM-based XSS
 // CWE-116: Improper encoding or escaping of output
 
 console.log("⚠️ VULNERABLE APPLICATION LOADED ⚠️");
-console.log("This application contains intentional security vulnerabilities.");
-console.log("For educational purposes only - DO NOT use in production!");
+console.log("This application has known, unremediated security weaknesses.");
+console.log("Do not expose it to the internet while they remain open.");
 
 // Initialize application
 document.addEventListener('DOMContentLoaded', function() {
@@ -244,7 +244,7 @@ function makeUnauthenticatedRequest(url, data) {
     form.submit();
 }
 
-// Expose functions for educational purposes
+// Expose functions for debugging
 window.vulnerableFunctions = {
     getCookie,
     setCookie,

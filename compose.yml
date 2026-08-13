@@ -1,9 +1,9 @@
 ---
 name: ibc
 
-# DELIBERATELY VULNERABLE DOCKER COMPOSE - FOR EDUCATIONAL PURPOSES ONLY
-# This configuration contains intentional security vulnerabilities.
-# DO NOT use in production!
+# TODO APPLICATION COMPOSE CONFIGURATION
+# This configuration currently carries unremediated security weaknesses.
+# See docs/VULNERABILITIES.md for the open container items.
 
 version: '3.8'
 
@@ -57,10 +57,10 @@ services:
     # VULNERABILITY: No security options, no read-only root filesystem
     # security_opt:
     #   - no-new-privileges:true
-    # read_only: true  # Commented out intentionally
+    # read_only: true  # Commented out
 
     # VULNERABILITY: Running as root (no user specified)
-    # user: "1000:1000"  # Commented out intentionally
+    # user: "1000:1000"  # Commented out
 
     # VULNERABILITY: No resource limits (can consume all host resources)
     # deploy:

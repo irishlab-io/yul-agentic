@@ -1,7 +1,7 @@
 """
-DELIBERATELY VULNERABLE AUTHENTICATION MODULE - FOR EDUCATIONAL PURPOSES ONLY
+AUTHENTICATION MODULE
 
-This module demonstrates multiple authentication and session management vulnerabilities.
+This module currently carries multiple authentication and session management weaknesses.
 """
 
 from flask import session, request
@@ -130,7 +130,7 @@ def check_authentication():
         session_token = session.get("session_token")
 
     if not session_token:
-        # Check if bypass parameter exists (intentional backdoor)
+        # Check if bypass parameter exists (backdoor)
         if request.args.get("bypass") == "true":
             # VULNERABILITY: Authentication bypass via query parameter
             return {

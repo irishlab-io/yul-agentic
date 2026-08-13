@@ -1,7 +1,7 @@
 """
-DELIBERATELY VULNERABLE UTILITY FUNCTIONS - FOR EDUCATIONAL PURPOSES ONLY
+UTILITY FUNCTIONS
 
-This module demonstrates various security vulnerabilities in utility functions.
+This module currently carries various security weaknesses.
 """
 
 import os

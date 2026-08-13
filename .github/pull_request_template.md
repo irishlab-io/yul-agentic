@@ -35,7 +35,7 @@ Closes #<!-- issue number -->
 ### If This is an AI-Generated PR
 
 - [ ] I have reviewed **all** AI-generated changes — not just the summary
-- [ ] No intentional teaching vulnerabilities were accidentally removed
+- [ ] The remediation closes the weakness completely — no equivalent bypass left beside it
 - [ ] The fix matches what was requested in the linked issue
 - [ ] I am satisfied this PR is safe to merge
 

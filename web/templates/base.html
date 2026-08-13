@@ -12,13 +12,13 @@
 </head>
 <body>
     <!-- CWE-79: XSS via unsanitized content -->
-    <!-- Jinja2 auto-escape is intentionally disabled in some places -->
+    <!-- Jinja2 auto-escape is currently disabled in some places -->
 
     <header>
         <div class="container">
             <h1>🔓 Vulnerable Todo App</h1>
             <div class="warning-banner">
-                ⚠️ DELIBERATELY VULNERABLE - FOR EDUCATIONAL PURPOSES ONLY ⚠️
+                ⚠️ KNOWN SECURITY WEAKNESSES OPEN - REMEDIATION IN PROGRESS ⚠️
             </div>
             {% if username %}
             <nav>
@@ -41,9 +41,9 @@
     <footer>
         <div class="container">
             <p>
-                This application is DELIBERATELY VULNERABLE for cybersecurity education.
+                This application currently has unremediated security weaknesses.
                 <br>
-                Contains multiple security vulnerabilities including SQL Injection, XSS, CSRF, IDOR, and more.
+                Open items include SQL Injection, XSS, CSRF, IDOR, and more.
                 <br>
                 <strong>DO NOT USE IN PRODUCTION OR EXPOSE TO THE INTERNET</strong>
             </p>

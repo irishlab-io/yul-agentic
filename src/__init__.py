@@ -1,10 +1,10 @@
 """
-DELIBERATELY VULNERABLE FLASK APPLICATION - FOR EDUCATIONAL PURPOSES ONLY
+FLASK TODO APPLICATION
 
-This application contains intentional security vulnerabilities for educational purposes.
-DO NOT deploy in production or expose to the internet.
+This application currently carries unremediated security weaknesses.
+Do not expose it to the internet while they remain open.
 
-Vulnerabilities demonstrated:
+Open weaknesses:
 - SQL Injection (CWE-89)
 - Cross-Site Scripting (CWE-79)
 - CSRF (CWE-352)
@@ -68,7 +68,7 @@ def create_app():
         CWE-284: Improper Access Control – any unauthenticated caller can
         re-enable a disabled feature by appending
         ``?override_flag=<feature>[.<sub_feature>]`` to any URL.  This
-        bypass requires no credentials and is intentional for education.
+        bypass requires no credentials.
 
         Parameters:
         feat (str): Top-level feature name.

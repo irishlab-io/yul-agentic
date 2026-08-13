@@ -1,6 +1,6 @@
-# DELIBERATELY VULNERABLE DOCKERFILE - FOR EDUCATIONAL PURPOSES ONLY
-# This Dockerfile contains intentional security vulnerabilities for teaching purposes.
-# DO NOT use in production!
+# TODO APPLICATION CONTAINER IMAGE
+# This Dockerfile currently carries unremediated security weaknesses.
+# See docs/VULNERABILITIES.md for the open container items.
 
 # CWE-1104: Use of Unmaintained Third Party Components
 # VULNERABILITY: Using Python 3.11 base image without security patches
@@ -11,7 +11,7 @@ FROM python:3.11-slim
 # VULNERABILITY: Using ADD instead of COPY (ADD has additional features that can be exploited)
 # Best practice: Use COPY for local files
 LABEL maintainer="vulnerable@example.com" \
-      description="Deliberately vulnerable todo application for education" \
+      description="Todo application" \
       version="0.1.0"
 
 # CWE-798: Hardcoded credentials in Dockerfile
@@ -73,7 +73,7 @@ RUN pip install --no-cache-dir \
 EXPOSE 8000 8080 3000 5000 9000
 
 # VULNERABILITY: No healthcheck (would help detect compromised container)
-# Commented out intentionally:
+# Commented out:
 # HEALTHCHECK --interval=30s --timeout=3s CMD curl -f http://localhost:8000/ || exit 1
 
 # CWE-732: Incorrect Permission Assignment

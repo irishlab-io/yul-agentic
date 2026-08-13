@@ -1,7 +1,7 @@
 """
-DELIBERATELY VULNERABLE DATABASE MODELS - FOR EDUCATIONAL PURPOSES ONLY
+DATABASE MODELS
 
-This module demonstrates insecure database design and operations.
+This module currently carries insecure database design and operations.
 """
 
 import sqlite3

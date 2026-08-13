@@ -185,8 +185,8 @@ Work through this checklist before marking the PR ready for review:
 - [ ] Run the full test suite: `uv run pytest`
 - [ ] Confirm test coverage remains ≥92%: check the pytest coverage report
 - [ ] No new security vulnerabilities were introduced
-- [ ] No **intentional** teaching vulnerabilities were accidentally removed
-      (look for `# INTENTIONAL VULNERABILITY` comments in the source)
+- [ ] The remediation closes the weakness completely — no equivalent bypass
+      left beside it (check nearby `# VULNERABILITY:` markers in the source)
 - [ ] Code follows project style:
   - Ruff-compatible, 128-char line length
   - PEP 257 docstrings
@@ -281,16 +281,17 @@ changes manually.
 
 ## Security Considerations
 
-This is a **deliberately vulnerable** application. The AI prompt
-(`.github/prompt/issue-fix.prompt.md`) explicitly instructs the AI to:
+This application carries a backlog of known weaknesses that the workflow exists to
+remediate. The AI prompt (`.github/prompt/issue-fix.prompt.md`) explicitly
+instructs the AI to:
 
 - Never introduce **new** security vulnerabilities
-- Preserve **intentional** vulnerabilities unless the issue explicitly targets them
+- Remediate the weakness the issue reports, completely, leaving no equivalent bypass
 - Make surgical, minimal changes scoped to the issue
 
 Despite these instructions, **always review AI-generated code carefully**. An AI
-can misidentify intentional vs unintentional vulnerabilities and inadvertently
-patch a teaching tool.
+can believe it has closed a weakness while leaving an equivalent path open, or
+break behaviour the tests do not cover.
 
 ---
 

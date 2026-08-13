@@ -91,7 +91,7 @@ class TestAuthentication:
             assert result['success'] is False
 
     def test_authenticate_sql_injection_vulnerability(self, app):
-        """Test that SQL injection vulnerability exists (for educational purposes)."""
+        """Test that the SQL injection weakness is still present (open backlog item)."""
         with app.app_context():
             # Register a user
             auth.register_user('victim', 'password123')
@@ -160,5 +160,5 @@ class TestAuthorizationBypass:
             response = client.get('/todos?bypass=true')
 
             # Should allow access (vulnerability)
-            # This is intentionally vulnerable for educational purposes
+            # Asserts the current (unremediated) behaviour
             assert response.status_code in [200, 302]  # Either success or redirect

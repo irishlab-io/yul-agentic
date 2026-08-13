@@ -1,11 +1,11 @@
-DELIBERATELY VULNERABLE TODO APPLICATION - PROJECT SUMMARY
+TODO APPLICATION - PROJECT SUMMARY
 ===========================================================
 
 PROJECT COMPLETION STATUS: ✅ 100% (27/27 todos completed)
 
 OVERVIEW
 --------
-Created a deliberately vulnerable web application for cybersecurity education
+Created a web application with a catalogued backlog of security weaknesses
 demonstrating 14+ vulnerability types, vulnerable dependencies, and insecure
 container configurations.
 
@@ -36,9 +36,9 @@ Static Assets (2 files):
 Configuration Files:
 - requirements.txt              - Vulnerable dependencies list
 - pyproject.toml               - UV package configuration
-- Dockerfile                   - Deliberately insecure container
+- Dockerfile                   - Currently insecure container
 - compose.yml                  - Vulnerable Docker Compose config
-- .dockerignore               - Minimal (intentionally incomplete)
+- .dockerignore               - Minimal (incomplete)
 
 Documentation (4 files):
 - README.md           (12,500+ bytes) - Complete project overview
@@ -97,9 +97,9 @@ APPLICATION FEATURES
 ✅ REST API endpoints
 ✅ XML import/export
 
-EDUCATIONAL CONTENT
-------------------
-✅ Inline code comments explaining vulnerabilities
+WEAKNESS DOCUMENTATION
+----------------------
+✅ Inline code comments marking each weakness
 ✅ CWE references throughout
 ✅ Vulnerability hints in templates
 ✅ Comprehensive vulnerability documentation
@@ -120,11 +120,10 @@ Docker:
 
 SECURITY WARNINGS
 ----------------
-⚠️  DELIBERATELY VULNERABLE - FOR EDUCATIONAL PURPOSES ONLY
-❌  DO NOT deploy in production
-❌  DO NOT expose to internet
-❌  DO NOT use code in real applications
-✅  DO use in isolated learning environments only
+⚠️  KNOWN WEAKNESSES OPEN - REMEDIATION IN PROGRESS
+❌  DO NOT expose to internet while the backlog is open
+✅  DO run in isolated environments until remediation completes
+✅  DO work through docs/VULNERABILITIES.md
 
 LEARNING OBJECTIVES MET
 -----------------------
@@ -144,12 +143,12 @@ Files Created: 25+
 Time to Implement: Single session
 Completion Rate: 100%
 
-EDUCATIONAL VALUE
-----------------
-This project provides a comprehensive learning environment for:
+PROJECT VALUE
+-------------
+This project provides a comprehensive environment for:
 - Understanding common web vulnerabilities
-- Learning exploitation techniques safely
-- Practicing vulnerability identification
+- Reproducing weaknesses safely
+- Practicing vulnerability identification and remediation
 - Understanding security implications
 - Learning secure coding practices by contrast
 

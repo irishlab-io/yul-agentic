@@ -1,7 +1,7 @@
 """
-DELIBERATELY VULNERABLE CONFIGURATION - FOR EDUCATIONAL PURPOSES ONLY
+CONFIGURATION
 
-This configuration file demonstrates multiple security vulnerabilities:
+This configuration file currently carries multiple security weaknesses:
 - CWE-798: Hardcoded credentials
 - CWE-259: Hardcoded password
 - CWE-321: Use of hard-coded cryptographic key

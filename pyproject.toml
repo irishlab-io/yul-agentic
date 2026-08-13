@@ -1,7 +1,7 @@
 [project]
 name = "vulnerable-todo-app"
 version = "0.1.0"
-description = "Deliberately vulnerable todo list application for cybersecurity education - DO NOT USE IN PRODUCTION"
+description = "Todo list application"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
@@ -80,5 +80,5 @@ markers = [
 ]
 
 
-# Note: This project intentionally uses outdated and vulnerable packages
-# for educational purposes. Never use these in production!
+# Note: These pins are currently outdated and carry known CVEs.
+# They are open items in the remediation backlog - see docs/VULNERABILITIES.md.

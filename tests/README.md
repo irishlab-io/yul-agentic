@@ -1,6 +1,6 @@
 # Test Suite for Vulnerable Todo Application
 
-This directory contains comprehensive tests for the deliberately vulnerable todo application.
+This directory contains comprehensive tests for the todo application.
 
 ## Overview
 
@@ -197,12 +197,12 @@ These tests serve multiple purposes:
 
 ## Important Notes
 
-⚠️ **For Educational Use Only**
+⚠️ **Some tests assert that weaknesses are still present**
 
-- These tests intentionally verify that vulnerabilities exist
-- They demonstrate how vulnerabilities can be exploited
-- Never use this code or these patterns in production
-- Always follow secure coding practices in real applications
+- Several tests currently verify that an unremediated weakness exists
+- When you remediate a weakness, update or replace the test that asserted it — the
+  test should then verify the fix holds
+- New code should follow secure coding practices
 
 ## CI/CD Integration
 

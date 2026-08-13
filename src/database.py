@@ -1,7 +1,7 @@
 """
-DELIBERATELY VULNERABLE TODO OPERATIONS - FOR EDUCATIONAL PURPOSES ONLY
+TODO OPERATIONS
 
-This module demonstrates IDOR, SQL injection, and authorization vulnerabilities.
+This module currently carries IDOR, SQL injection, and authorization weaknesses.
 """
 
 from .models import db

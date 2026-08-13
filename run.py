@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 """
-DELIBERATELY VULNERABLE APPLICATION - FOR EDUCATIONAL PURPOSES ONLY
-This application contains intentional security vulnerabilities.
-DO NOT deploy in production or expose to the internet.
+TODO APPLICATION ENTRY POINT
+This application currently carries unremediated security weaknesses.
+Do not expose it to the internet while they remain open.
 """
 
 from src import create_app
