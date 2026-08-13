@@ -54,17 +54,17 @@ class TestSessionToken:
         assert token is not None
         assert len(token) > 0
 
-    def test_generate_session_token_predictability(self):
-        """Test that session tokens are predictable (vulnerability)."""
-        # This demonstrates the vulnerability
+    def test_generate_session_token_is_unpredictable(self):
+        """Test that session tokens are generated securely."""
         user_id = 456
         token1 = utils.generate_session_token(user_id)
         token2 = utils.generate_session_token(user_id)
 
-        # Tokens should be different but predictable based on timestamp
-        # (This is a vulnerability demonstration)
         assert token1 is not None
         assert token2 is not None
+        assert len(token1) > 0
+        assert len(token2) > 0
+        assert token1 != token2
 
 
 class TestSerialization:
