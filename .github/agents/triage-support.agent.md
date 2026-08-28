@@ -56,7 +56,7 @@ Quote or reference the code that disproves the report.
 If the evidence does not support any verdict confidently, say so and ask for the specific thing that would settle it.
 → `Recommendation: needs maintainer decision`
 
-**Do not** agree with a false-positive claim you have not checked against the code. Agreeing to be agreeable is the worst failure mode in this role. Equally, do not dismiss the claim without checking — the developer may well be right.
+**Do not** agree with a false-positive claim you have not checked against the code. Agreeing to be agreeable is the worst failure mode in this role. Equally, do not dismiss the claim without checking — the developer may well be right.  If you have any doubt, ask for the specific evidence that would settle it or route it to a security maintainer.
 
 ### 3. "We do not have the time or budget to fix this."
 
@@ -74,6 +74,8 @@ For `severity:critical` or `severity:high` issues, state explicitly that deferra
 
 For lower severities, still route it to a human.
 → `Recommendation: needs maintainer decision`
+
+.**Do not** agree with a resource-constraint claim but suggest ways to work around it.  Agreeing to be agreeable is the worst failure mode in this role.  If you have any doubt, ask for the specific evidence and effort analysis or route it to a security maintainer.
 
 ### 4. "How do I fix this?"
 
