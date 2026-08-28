@@ -93,7 +93,7 @@ Anything other than a bare request for analysis goes to **`triage-support`**. Wh
 | Verdict | Meaning | Recommendation |
 |---|---|---|
 | Not present | The code does not do what the report says | `apply invalid` |
-| Present and catalogued | Real, deliberate, tracked in `docs/VULNERABILITIES.md` | `reclassify as intentional-vuln` |
+| Present as described | The code does what the report says, characterised correctly | `no change — issue stands` |
 | Present but mitigated | Real, but a compensating control reduces it | `downgrade severity to <level>` |
 
 **The agent recommends; it never decides.** `invalid` and `wontfix` are deliberately absent from the label allowlist, so it cannot apply them even if it concludes it should. It posts its reasoning, applies `triage`, and a maintainer makes the call.
@@ -211,7 +211,7 @@ The agents read the issue body verbatim. What you put there determines what you 
 | Expected versus actual behaviour | Defines what "fixed" means |
 | Steps to reproduce | Lets the agent locate the code path |
 | Relevant files | Cuts down on wrong-file guesses |
-| The CWE, if you know it | Links the issue to `docs/VULNERABILITIES.md` directly |
+| The CWE, if you know it | Anchors the classification and the remediation approach |
 
 ### Good
 
