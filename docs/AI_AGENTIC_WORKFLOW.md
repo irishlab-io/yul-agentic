@@ -40,7 +40,7 @@ Issue opened / reopened
         │        │     "this is a false positive"                │
         │        │     "we have no time or budget"               │
         │        │     "how do I fix this?"                      │
-        │        │   Labels + one comment + backlog chart        │
+        │        │   Labels + one comment                        │
         │        │   Recommends only — never closes              │
         │        └───────────────────────────────────────────────┘
         │
@@ -79,7 +79,7 @@ Triggers on the `/issue-triage` slash command in an issue comment — `/triage-i
 The command takes free text, and the workflow routes on it:
 
 ```text
-/issue-triage                                    → deep re-analysis, with a backlog chart
+/issue-triage                                    → deep re-analysis of the issue
 /issue-triage why is this an issue?              → plain-language explanation
 /issue-triage this is a false positive           → three-way verdict, adjudicated against the code
 /issue-triage we have no budget this quarter     → deferral record
@@ -98,7 +98,7 @@ Anything other than a bare request for analysis goes to **`triage-support`**. Wh
 
 **The agent recommends; it never decides.** `invalid` and `wontfix` are deliberately absent from the label allowlist, so it cannot apply them even if it concludes it should. It posts its reasoning, applies `triage`, and a maintainer makes the call.
 
-Safe outputs: `add-comment` (max 1), `add-labels` (max 4), `upload-asset` (max 2, `.png` only, for the backlog chart).
+Safe outputs: `add-comment` (max 1), `add-labels` (max 4).
 
 ### `aw-fixer.md` — issue to draft pull request
 
@@ -322,9 +322,9 @@ Check `gh aw logs <workflow>`. A `noop` is a successful outcome, not a failure �
 
 The label must exist in the repository **and** be in that workflow's `safe-outputs.add-labels.allowed` list. Both, or nothing happens. `invalid` and `wontfix` are excluded on purpose.
 
-### The backlog chart is missing from a comment
+### The run succeeded but no comment or labels appeared
 
-By design in some modes: `/issue-triage` builds the chart for deep analysis and deferral requests only. Elsewhere it is noise. If it is missing where it was expected, the agent is instructed to post the comment anyway and say the chart was unavailable — check the run logs for the Python or upload failure.
+The agent analysed the issue and then stayed silent. That is a failed run, and the workflow prompt forbids it: if something it needed was unavailable, it must say so inside the comment and post anyway. Check `gh aw logs aw-issue-triage` for what it thought was blocking, and treat the prompt as needing a fix.
 
 ### A `.lock.yml` is out of date
 
