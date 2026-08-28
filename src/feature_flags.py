@@ -99,11 +99,9 @@ def load_flags(flags_file: Optional[str] = None) -> None:
     if os.path.exists(flags_file):
         try:
             with open(flags_file, "r") as fh:
-                # VULNERABILITY: CWE-502 – yaml.load with the full Loader
-                # allows execution of arbitrary Python code embedded in the
-                # YAML file (e.g. !!python/object/apply:os.system ["cmd"]).
-                # Replace with yaml.safe_load(fh) in a real application.
-                loaded = yaml.load(fh, Loader=yaml.Loader)  # noqa: S506
+                # Use the safe loader so feature flag files can only define
+                # plain YAML data structures.
+                loaded = yaml.safe_load(fh)
 
             if loaded and isinstance(loaded, dict) and "features" in loaded:
                 _flags = loaded["features"]
