@@ -1,317 +1,352 @@
-# AI AGENTIC WORKFLOW — ISSUE TO DRAFT PR
+# AI AGENTIC WORKFLOWS — TRIAGE, SUPPORT, AND FIX
 
 ## Overview
 
-This repository includes an automated **AI agentic workflow** that transforms a
-GitHub Issue into a draft Pull Request with a proposed code fix — with minimal
-manual effort from your team.
+This repository automates issue handling with [GitHub Agentic Workflows (gh-aw)](https://github.github.com/gh-aw/) — workflows written as Markdown with YAML frontmatter, compiled into GitHub Actions YAML, and executed by the GitHub Copilot engine.
 
-When a developer applies the `ai-fix` label to any issue, GitHub Actions fires
-a four-job pipeline that analyses the issue, delegates code generation to the
-GitHub Copilot coding agent (with a GitHub Models fallback), and opens a draft
-PR linked back to the originating issue.
+Three workflows cover the lifecycle of an issue:
 
-Your team then reviews, validates, and merges — the AI does the scaffolding,
-humans own the final decision.
+| Workflow | Fires when | What it does |
+|---|---|---|
+| `aw-triage.md` | An issue is opened or reopened | Classifies it, applies category and `severity:*` labels, posts one guidance comment |
+| `aw-issue-triage.md` | Someone comments `/issue-triage` | Answers developer questions and objections, or re-analyses the issue on demand |
+| `aw-fixer.md` | The `enhancement` or `security` label is applied | Writes the fix and opens a draft pull request |
+
+Each delegates its real work to a **sub-agent** in `.github/agents/`, so the taxonomy, the engineering procedure, and the review bar each live in exactly one place.
+
+Humans own every decision that matters: the agent job is read-only, every write goes through a constrained safe output, and every pull request opens as a draft.
 
 ---
 
 ## Architecture
 
 ```text
-Developer creates GitHub Issue
-          │
-          ▼
-  Human applies label  ──── "ai-fix"
-  ─────────────────────────────────────────────────────────────────────
-  (OR)  Developer assigns issue to @Copilot in the GitHub UI sidebar
-          │
-          ▼
-┌─────────────────────────────────────────────────────────────────────┐
-│              .github/workflows/ai-issue-fix.yml                     │
-│                                                                     │
-│  Job 1 ── guard                                                     │
-│           Confirm label is exactly "ai-fix"; skip otherwise         │
-│                                                                     │
-│  Job 2 ── triage  (needs: guard)                                    │
-│           • Checkout repo                                           │
-│           • Extract issue title, body, labels, URL                  │
-│           • Post "🤖 Working on it…" comment on the issue           │
-│           • Create branch  ai/issue-{N}-{slug}                      │
-│           • Push branch to origin                                    │
-│                                                                     │
-│  Job 3 ── ai-generate  (needs: triage)                              │
-│           • Primary:  assign issue to Copilot coding agent           │
-│             via REST API → agent applies commits to the branch       │
-│           • Fallback: call GitHub Models (gpt-4o) via               │
-│             actions/ai-inference → write analysis file to branch     │
-│                                                                     │
-│  Job 4 ── draft-pr  (needs: ai-generate)                            │
-│           • gh pr create --draft                                    │
-│           • Body: "Closes #N", review checklist, workflow link       │
-│           • Labels: ai-generated, needs-review                      │
-│           • Post PR link comment back on original issue              │
-└─────────────────────────────────────────────────────────────────────┘
-          │
-          ▼
-  Draft PR opened — your team reviews and merges
+Issue opened / reopened
+        │
+        ▼
+┌────────────────────────────────────────────────────────────────┐
+│ aw-triage.md                          → triage-analyst         │
+│   Classify · category + severity labels · one guidance comment │
+└────────────────────────────────────────────────────────────────┘
+        │
+        ├──────────────► Developer comments /issue-triage
+        │                        │
+        │                        ▼
+        │        ┌───────────────────────────────────────────────┐
+        │        │ aw-issue-triage.md                            │
+        │        │   Mode A  deep re-analysis  → triage-analyst  │
+        │        │   Mode B  developer support → triage-support  │
+        │        │     "why is this an issue?"                   │
+        │        │     "this is a false positive"                │
+        │        │     "we have no time or budget"               │
+        │        │     "how do I fix this?"                      │
+        │        │   Labels + one comment + backlog chart        │
+        │        │   Recommends only — never closes              │
+        │        └───────────────────────────────────────────────┘
+        │
+        ▼
+Maintainer applies `enhancement` or `security`
+        │
+        ▼
+┌────────────────────────────────────────────────────────────────┐
+│ aw-fixer.md                           → software-engineer      │
+│   Real code change · draft PR on an aw/ branch                 │
+│   Labelled agentic-workflows + needs-review                    │
+└────────────────────────────────────────────────────────────────┘
+        │
+        ▼
+CI (.github/workflows/main.yml) runs · human reviews · human merges
 ```
 
----
-
-## Trigger Paths
-
-### Path A — Label Trigger (Automation)
-
-Best for: scripted workflows, CI/CD demonstrations, repeatable runs.
-
-1. Create (or open) any GitHub Issue
-2. Apply the `ai-fix` label
-3. The workflow fires within seconds
-4. Watch the Actions tab for progress
-
-### Path B — Native Copilot Coding Agent (Zero-Friction UI)
-
-Best for: quick one-off requests directly from the GitHub UI.
-
-1. Create a GitHub Issue with a clear problem description
-2. In the **Assignees** field, assign `Copilot`
-3. The Copilot coding agent uses `.github/copilot-setup-steps.yml` to
-   set up the dev environment and `.github/prompt/issue-fix.prompt.md`
-   as its codebase context
-4. A draft PR appears automatically
-
-> **Requirement:** GitHub Copilot Business or Enterprise plan must be active
-> on the organisation for Path B. Path A works with any GitHub Actions setup.
+`security-reviewer` sits outside the automatic path. It is invocable directly from Copilot CLI or VS Code for ad-hoc review of a diff.
 
 ---
 
-## Setup — One-Time Configuration
+## The workflows
 
-### Step 1: Create the Required Labels
+### `aw-triage.md` — first-pass classification
 
-Run these commands once with a token that has `write:org` or `repo` scope:
+Triggers on `issues: [opened, reopened]`, plus `workflow_dispatch` with an issue number for a manual re-run.
 
-```bash
-gh label create "ai-fix" \
-  --color "0075ca" \
-  --description "Trigger the AI agentic workflow to generate a draft fix PR"
+Delegates to **`triage-analyst`**, which owns the category taxonomy (`bug`, `documentation`, `enhancement`, `question`, `security`, `triage`), the `severity:*` scale, and the reporter-facing comment guidance. Calls `noop` and stops on an empty, spam, or test issue.
 
-gh label create "ai-generated" \
-  --color "e4e669" \
-  --description "PR or content generated by the AI agentic workflow"
+Safe outputs: `add-comment` (max 1), `add-labels` (max 3).
 
-gh label create "needs-review" \
-  --color "d93f0b" \
-  --description "Requires human review before merge"
-```
+### `aw-issue-triage.md` — developer support and deep re-triage
 
-### Step 2: Verify Workflow Permissions
+Triggers on the `/issue-triage` slash command in an issue comment. Open to **any authenticated GitHub user** (`roles: all`); pull request comments are excluded.
 
-The workflow uses `GITHUB_TOKEN` (auto-provided by GitHub Actions). Ensure the
-repository's **Actions → General → Workflow permissions** setting is set to
-**Read and write permissions**.
-
-### Step 3: Enable Copilot Coding Agent (Path B only)
-
-In your GitHub Organisation settings:
-
-1. Navigate to **Settings → Copilot → Policies**
-2. Enable **"Copilot in GitHub.com"**
-3. Ensure the repository is included in the policy scope
-
-The environment pre-install is defined in `.github/copilot-setup-steps.yml`
-and installs: uv, Python 3.10, all project dependencies, Playwright browsers,
-and runs Django migrations.
-
----
-
-## Writing Effective Issues
-
-Use the **"🤖 AI Fix Request"** issue template (available in the Issues tab)
-for structured, AI-friendly issues. The template auto-applies the `ai-fix` label.
-
-If writing a free-form issue, include:
-
-| Field | Why it matters |
-|-------|---------------|
-| **Clear problem description** | The AI reads this verbatim as its task |
-| **Expected behaviour** | Defines the success criteria |
-| **Steps to reproduce** | Helps the AI locate the broken code path |
-| **Relevant files** (optional) | Cuts down on AI hallucinating file paths |
-| **Severity** | Helps prioritise if multiple issues are open |
-
-### Good Issue Example
+The command takes free text, and the workflow routes on it:
 
 ```text
-Title: [ai-fix] Login endpoint does not rate-limit failed attempts
-
-Problem Description:
-The POST /login endpoint accepts unlimited authentication attempts without
-any rate limiting. An attacker can brute-force credentials.
-
-Expected Behaviour:
-After 5 consecutive failed attempts from the same IP, return HTTP 429
-and lock the account for 15 minutes.
-
-Steps to Reproduce:
-1. Send 10 POST requests to /login with invalid credentials
-2. Observe that all requests return 200 or 401 — never 429
-
-Relevant Files: src/auth.py, tests/unit/test_auth.py
-
-Severity: Critical — security vulnerability or data loss
+/issue-triage                                    → deep re-analysis, with a backlog chart
+/issue-triage why is this an issue?              → plain-language explanation
+/issue-triage this is a false positive           → three-way verdict, adjudicated against the code
+/issue-triage we have no budget this quarter     → deferral record
+/issue-triage how would we fix this?             → remediation approach, no patch
 ```
 
-### Poor Issue Example
+Anything other than a bare request for analysis goes to **`triage-support`**. When the answer changes the classification, it passes back through `triage-analyst` so the taxonomy stays in one place.
+
+**The false-positive verdict** is the part to understand. Most weaknesses in this repository are intentional and catalogued, so "this is a false positive" is usually wrong — but not always. The agent must return exactly one of three verdicts, each with cited evidence:
+
+| Verdict | Meaning | Recommendation |
+|---|---|---|
+| Not present | The code does not do what the report says | `apply invalid` |
+| Present and catalogued | Real, deliberate, tracked in `docs/VULNERABILITIES.md` | `reclassify as intentional-vuln` |
+| Present but mitigated | Real, but a compensating control reduces it | `downgrade severity to <level>` |
+
+**The agent recommends; it never decides.** `invalid` and `wontfix` are deliberately absent from the label allowlist, so it cannot apply them even if it concludes it should. It posts its reasoning, applies `triage`, and a maintainer makes the call.
+
+Safe outputs: `add-comment` (max 1), `add-labels` (max 4), `upload-asset` (max 2, `.png` only, for the backlog chart).
+
+### `aw-fixer.md` — issue to draft pull request
+
+Triggers when the `enhancement` or `security` label is applied to an issue, plus `workflow_dispatch` with an issue number. Restricted to `admin`, `maintainer`, and `write` roles.
+
+Delegates to **`software-engineer`**, which owns the codebase grounding, the fix-to-PR procedure, the quality bar, and the security-remediation rules. A stub, a placeholder, or a documentation-only diff is a failed run.
+
+The workflow deliberately does **not** run the linter, type checker, or test suite — CI does that on the pull request it opens.
+
+Safe output: `create-pull-request` with `title-prefix: "[aw]: "`, `branch-prefix: "aw/"`, labels `agentic-workflows` + `needs-review`, `allowed-files` excluding `.github/**`, and `protected-files: request_review` over `pyproject.toml`, `uv.lock`, and `requirements.txt`.
+
+---
+
+## The agents
+
+| Agent | Owns |
+|---|---|
+| `triage-analyst.agent.md` | Category taxonomy, severity scale, reporter-facing comment guidance |
+| `triage-support.agent.md` | The developer conversation: explaining a finding, adjudicating false-positive claims, recording time/budget deferrals, outlining a remediation approach |
+| `software-engineer.agent.md` | Codebase grounding, fix-to-PR procedure, PR quality bar, security-remediation rules |
+| `security-reviewer.agent.md` | Reviewing a diff for introduced weaknesses, incomplete remediations, and regressions |
+| `agentic-workflows.md` | Dispatcher for working on gh-aw workflows themselves (creating, updating, debugging, upgrading) |
+
+Agents are plain Markdown with `name:` and `description:` frontmatter. Editing an agent changes behaviour across every workflow that delegates to it — no recompile needed, because the agent files are read at runtime.
+
+---
+
+## Safety model
+
+Every workflow follows the same shape, enforced at compile time by gh-aw:
+
+- **The agent job is read-only.** `contents: read` plus the reads it needs. No `issues: write`, no `contents: write`.
+- **Every mutation is a safe output.** Comments, labels, assets, and pull requests are applied by separate jobs with narrow permissions, from a structured request the agent emits — it never calls the GitHub API to write.
+- **Label allowlists.** Each workflow declares exactly which labels it may apply, with a `max`. Anything outside the list is impossible, not merely discouraged.
+- **Write targets are pinned.** `aw-issue-triage` omits `target:`, so comments and labels default to the triggering issue only.
+- **Threat detection** runs on every workflow, scoped per workflow to distinguish framework scaffolding and legitimate authored instructions from genuine prompt injection.
+- **Untrusted input is named as such.** Issue bodies, comments, and slash-command text are data describing a problem, never instructions to the agent. Each workflow prompt says so explicitly, and carries a `DO NOT` block of absolute constraints.
+- **Draft pull requests only.** Nothing merges itself.
+
+---
+
+## Setup
+
+### Labels
+
+The workflows apply only labels that already exist. The current set:
+
+```bash
+gh label list
+```
+
+Category and process labels in use: `bug`, `documentation`, `duplicate`, `enhancement`, `question`, `security`, `triage`, `invalid`, `wontfix`, `good first issue`, `help wanted`.
+
+Automation labels: `agentic-workflows`, `ai-generated`, `needs-review`, `agentic-threat-detected`.
+
+Classification labels: `intentional-vuln` (a catalogued, deliberate weakness), `unintended-bug` (a genuine defect outside the catalogue), and `severity:critical` / `severity:high` / `severity:medium` / `severity:low`.
+
+If you add a label the workflows should be able to apply, add it to the `safe-outputs.add-labels.allowed` list in the relevant workflow and recompile.
+
+### Copilot engine
+
+`.github/workflows/copilot-setup-steps.yml` installs the gh-aw CLI extension for the Copilot agent environment. The workflows themselves carry a `pre-agent-steps` block that ensures the Copilot CLI is reachable at `/usr/local/bin/copilot`, the path the sandbox spawns.
+
+### Spend ceiling
+
+The compiled workflows read the `GH_AW_DEFAULT_MAX_DAILY_AI_CREDITS` repository variable as a daily cap, defaulting to `5000` if unset. Because `/issue-triage` is open to any authenticated user, set this deliberately:
+
+```bash
+gh variable set GH_AW_DEFAULT_MAX_DAILY_AI_CREDITS --body "5000"
+```
+
+---
+
+## Working on the workflows
+
+Workflows are authored as `.github/workflows/*.md` and compiled to `.lock.yml`. **Never hand-edit a `.lock.yml`** — change the Markdown and recompile.
+
+```bash
+# Compile one workflow, or all of them
+gh aw compile aw-issue-triage
+gh aw compile
+
+# Validate without writing lock files
+gh aw validate aw-issue-triage
+
+# Actionlint the generated workflow
+gh aw lint .github/workflows/aw-issue-triage.lock.yml
+
+# Trigger a run on demand (not `gh workflow run`)
+gh aw run aw-fixer --ref main
+
+# Inspect what happened
+gh aw logs aw-issue-triage
+gh aw audit <run-id>
+```
+
+Both the `.md` and its regenerated `.lock.yml` belong in the same commit.
+
+For help authoring workflows, address the `agentic-workflows` agent in Copilot CLI or VS Code — it routes to the right gh-aw reference for creating, updating, debugging, or upgrading.
+
+---
+
+## Writing issues the workflows can act on
+
+The agents read the issue body verbatim. What you put there determines what you get back.
+
+| Include | Why it matters |
+|---|---|
+| A clear problem description | It is the task, read literally |
+| Expected versus actual behaviour | Defines what "fixed" means |
+| Steps to reproduce | Lets the agent locate the code path |
+| Relevant files | Cuts down on wrong-file guesses |
+| The CWE, if you know it | Links the issue to `docs/VULNERABILITIES.md` directly |
+
+### Good
+
+```text
+Title: Login endpoint does not rate-limit failed attempts
+
+The POST /login route in src/auth.py accepts unlimited authentication
+attempts with no rate limiting, so credentials can be brute-forced.
+
+Expected: after 5 consecutive failed attempts from one IP, return HTTP 429
+and lock the account for 15 minutes.
+
+Reproduce:
+1. Send 10 POST requests to /login with invalid credentials
+2. Every request returns 200 or 401 — never 429
+
+Relevant files: src/auth.py, tests/test_auth.py
+```
+
+### Poor
 
 ```text
 Title: Login is broken — fix it
 Problem: authentication does not work
 ```
 
+### Disagreeing with a triage result
+
+If a classification looks wrong, do not edit the labels and move on — comment `/issue-triage` with what you think and why. The support agent checks the claim against the code and leaves a recommendation a maintainer can act on, so the reasoning stays on the issue.
+
 ---
 
-## Reviewing AI-Generated Pull Requests
+## Reviewing AI-generated pull requests
 
-All AI-generated PRs are opened as **drafts** with labels `ai-generated` and
-`needs-review`. They are **never** auto-merged.
+Every AI-generated pull request opens as a **draft**, labelled `agentic-workflows` and `needs-review`, on an `aw/`-prefixed branch. None of them auto-merge.
 
-### Review Checklist
+Before marking one ready for review:
 
-Work through this checklist before marking the PR ready for review:
+- [ ] Read every changed line — the summary is not the diff
+- [ ] Run the full suite: `make test` (mirrors CI, gated at ≥75% coverage)
+- [ ] Confirm no new weakness was introduced
+- [ ] Confirm the remediation is complete — no equivalent bypass left beside it. Check nearby `# VULNERABILITY:` markers
+- [ ] Confirm style: ruff defaults (88-char lines), PEP 257 docstrings, `typing` annotations
+- [ ] Confirm the commit messages follow Conventional Commits
 
-- [ ] **Read every changed line** — do not rely solely on the PR summary
-- [ ] Run the full test suite: `uv run pytest`
-- [ ] Confirm test coverage remains ≥92%: check the pytest coverage report
-- [ ] No new security vulnerabilities were introduced
-- [ ] The remediation closes the weakness completely — no equivalent bypass
-      left beside it (check nearby `# VULNERABILITY:` markers in the source)
-- [ ] Code follows project style:
-  - Ruff-compatible, 128-char line length
-  - PEP 257 docstrings
-  - `typing` module annotations
-- [ ] Commit message(s) follow Conventional Commits format
-- [ ] If Django models were changed, a migration is included
-
-### Validating the Fix
+### Validating locally
 
 ```bash
-# 1. Checkout the AI branch
 git fetch origin
-git checkout ai/issue-<N>-<slug>
+git checkout aw/<branch>
 
-# 2. Install dependencies (if not already done)
-uv sync --all-extras --dev --frozen
-
-# 3. Run the full test suite
-uv run pytest
-
-# 4. Run linter
-uv run ruff check src/
-
-# 5. Run type checker
-uv run ty check
-
-# 6. Smoke test the running app
-uv run python manage.py check
-uv run python manage.py migrate
-uv run python manage.py runserver
+make install          # uv venv + uv sync --all-extras --dev --frozen
+make test             # full suite with coverage, gated at 75%
+make style            # ruff format + ruff check + ty
+make run              # smoke test at http://localhost:8000
 ```
 
 ---
 
-## Workflow Files Reference
+## File reference
 
-| File | Purpose |
-|------|---------|
-| `.github/workflows/ai-issue-fix.yml` | Main label-triggered 4-job pipeline |
-| `.github/copilot-setup-steps.yml` | Dev environment for native Copilot coding agent |
-| `.github/prompt/issue-fix.prompt.md` | System prompt — codebase context for the AI |
-| `.github/ISSUE_TEMPLATE/ai-fix-request.yml` | Structured issue form |
-| `.github/pull_request_template.md` | PR checklist for AI-generated PRs |
-| `.github/copilot-instructions.md` | Global Copilot context (includes workflow docs) |
+| Path | Purpose |
+|---|---|
+| `.github/workflows/aw-triage.md` | First-pass classification workflow |
+| `.github/workflows/aw-issue-triage.md` | `/issue-triage` developer support and deep re-triage |
+| `.github/workflows/aw-fixer.md` | Issue-to-draft-PR workflow |
+| `.github/workflows/*.lock.yml` | Compiled Actions YAML — generated, never hand-edited |
+| `.github/workflows/main.yml` | CI: pre-commit, pytest, dependency and SAST scan stubs, container build |
+| `.github/workflows/copilot-setup-steps.yml` | Installs the gh-aw CLI for the Copilot agent environment |
+| `.github/agents/*.agent.md` | Sub-agents the workflows delegate to |
+| `.github/aw/actions-lock.json` | Pinned action digests for the generated workflows |
+| `.github/copilot-instructions.md` | Repository context for Copilot: commands, layout, style, workflow map |
+| `.github/pull_request_template.md` | PR checklist, including the AI-generated section |
+| `docs/VULNERABILITIES.md` | The remediation backlog — per-CWE description, locations, impact, mitigation |
 
 ---
 
-## Key Design Decisions
+## Design decisions
 
 | Decision | Rationale |
-|----------|-----------|
-| Draft PRs only | AI output always requires human verification before merge |
-| Concurrency lock per issue | Prevents duplicate PRs if the label is removed and re-applied |
-| Two trigger paths | Label trigger for automation; UI assign for developer convenience |
-| GitHub Models fallback | Ensures the workflow produces *something* even if Copilot coding agent is unavailable |
-| Conventional Commits enforced | Consistency with the existing commitizen pre-commit hook |
-| Branch naming `ai/issue-N-slug` | Easy to filter, identify, and clean up AI branches |
+|---|---|
+| Read-only agent job, writes via safe outputs | The agent cannot mutate the repository directly, whatever it is persuaded to attempt |
+| Draft pull requests only | AI output always needs human verification before merge |
+| One taxonomy, owned by one agent | `triage-analyst` is the only place categories and severities are defined; other agents defer to it |
+| `invalid` and `wontfix` off the allowlist | Dismissing a security report is a human decision, enforced by configuration rather than by prompt |
+| `/issue-triage` open to `roles: all` | Outside reporters who disagree with a triage result need the same path as the team |
+| `aw-fixer` does not run tests | CI validates the pull request; the agent spends its budget on a correct diff instead |
+| Explicit `DO NOT` blocks in every prompt | Boundary constraints stated as prohibitions hold up better than implied scope |
+| Branch prefix `aw/`, title prefix `[aw]: ` | Workflow-owned branches and PRs are filterable and identifiable at a glance |
+| Conventional Commits | Matches the commitizen `commit-msg` hook already enforced by pre-commit |
 
 ---
 
 ## Troubleshooting
 
-### Workflow doesn't fire when I apply the label
+### The workflow did not fire
 
-- Verify the label name is exactly `ai-fix` (case-sensitive)
-- Check the Actions tab for a queued or failed run
-- Confirm the repository has Actions enabled: **Settings → Actions → General**
+- For `/issue-triage`: the comment must **start** with the command. A command mid-sentence does not match, and PR comments are excluded by design.
+- For `aw-fixer`: confirm the applied label is exactly `enhancement` or `security`.
+- Check the Actions tab for a run that activated and then stopped — the `pre_activation` job gates on role and command match before any agent runs.
 
-### Draft PR is not created
+### The run activated but the agent did nothing
 
-- Check the `draft-pr` job logs in the Actions tab
-- Ensure `GITHUB_TOKEN` has **Read and write** workflow permissions
-- Verify the `ai-generated` and `needs-review` labels exist in the repo
-  (the `gh pr create --label` call will fail if labels are missing)
+Check `gh aw logs <workflow>`. A `noop` is a successful outcome, not a failure — the workflows call it deliberately on empty, spam, or test issues, and record the reason.
 
-### Copilot coding agent (Path B) does nothing
+### Labels were not applied
 
-- Confirm Copilot Business/Enterprise is enabled on the organisation
-- Check that `copilot-setup-steps.yml` runs without errors in the Copilot
-  agent logs (visible in the issue's activity feed)
-- Ensure the issue has a clear, detailed description — vague issues produce
-  poor results
+The label must exist in the repository **and** be in that workflow's `safe-outputs.add-labels.allowed` list. Both, or nothing happens. `invalid` and `wontfix` are excluded on purpose.
 
-### The AI analysis file appears but no code was changed
+### The backlog chart is missing from a comment
 
-This is the **fallback path** (GitHub Models). It means the Copilot coding agent
-REST API was unavailable. The file `.github/ai-proposals/issue-N-analysis.md`
-contains the AI's structured analysis. A developer should implement the proposed
-changes manually.
+By design in some modes: `/issue-triage` builds the chart for deep analysis and deferral requests only. Elsewhere it is noise. If it is missing where it was expected, the agent is instructed to post the comment anyway and say the chart was unavailable — check the run logs for the Python or upload failure.
 
----
+### A `.lock.yml` is out of date
 
-## Security Considerations
-
-This application carries a backlog of known weaknesses that the workflow exists to
-remediate. The AI prompt (`.github/prompt/issue-fix.prompt.md`) explicitly
-instructs the AI to:
-
-- Never introduce **new** security vulnerabilities
-- Remediate the weakness the issue reports, completely, leaving no equivalent bypass
-- Make surgical, minimal changes scoped to the issue
-
-Despite these instructions, **always review AI-generated code carefully**. An AI
-can believe it has closed a weakness while leaving an equivalent path open, or
-break behaviour the tests do not cover.
+`gh aw compile` and commit the result. The compiled workflow carries a check that fails the run when the lock file is stale relative to its source.
 
 ---
 
 ## Limitations
 
 | Limitation | Notes |
-|-----------|-------|
-| Copilot coding agent requires paid plan | Path A (label trigger) works on any plan |
-| AI may hallucinate file paths | Use the "Relevant Files" field in issues to guide it |
-| Complex multi-file refactors may be incomplete | AI works best on focused, single-concern issues |
-| 30-minute job timeout | Very large codebases or slow installs may time out |
-| Draft PR requires manual promotion | By design — humans must approve before merge |
+|---|---|
+| Single-job model | gh-aw workflows cannot orchestrate multiple dependent jobs; use plain Actions for that |
+| Agents can be confidently wrong | Every output is a recommendation or a draft, never a decision |
+| Complex multi-file refactors | `aw-fixer` works best on focused, single-concern issues |
+| Job timeouts | 15 minutes for triage and fixer, 30 for `/issue-triage` |
+| Copilot credits are finite | `/issue-triage` is publicly triggerable; keep the daily ceiling set |
 
 ---
 
 ## Resources
 
-- [GitHub Copilot Coding Agent docs](https://docs.github.com/en/copilot/using-github-copilot/using-copilot-coding-agent-to-work-on-tasks)
-- [GitHub Actions — issues event trigger](https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows#issues)
-- [actions/ai-inference](https://github.com/actions/ai-inference)
-- [GitHub Models](https://github.com/marketplace/models)
+- [GitHub Agentic Workflows](https://github.github.com/gh-aw/) — the framework these workflows are built on
+- [gh-aw reference files](https://github.com/github/gh-aw/tree/main/.github/aw) — triggers, safe outputs, sub-agents, network, patterns
 - [Conventional Commits](https://www.conventionalcommits.org/)
-- [OWASP Top 10](https://owasp.org/www-project-top-ten/) — relevant for this app's context
+- [OWASP Top 10](https://owasp.org/www-project-top-ten/)
+- [CWE](https://cwe.mitre.org/)
