@@ -1,5 +1,5 @@
 ---
-name: triage-support
+name: AW - Triage Support
 description: Answers developer questions and objections on a triaged issue — why it was raised, false-positive claims, deferral for time or budget, and how a fix would be approached. Recommends; never decides, closes, or writes code.
 ---
 
