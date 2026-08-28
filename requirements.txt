@@ -72,7 +72,7 @@ packaging==23.1
     #   marshmallow
     #   pytest
 pathspec==0.11.2
-pillow==10.0.0
+pillow==12.3.0
     # via vulnerable-todo-app
 pip==26.1.1
     # via pip-tools
