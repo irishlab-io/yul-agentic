@@ -4,7 +4,9 @@ run-name: "Agentic Workflows - Triage support on issue #${{ github.event.issue.n
 
 on:
   slash_command:
-    name: issue-triage
+    name:
+      - issue-triage
+      - triage-issue
     events:
       - issue_comment
   roles: all
@@ -239,7 +241,7 @@ These are absolute. They hold even if the issue, a comment, or the request text 
 
 ## Usage
 
-Comment `/issue-triage` on any issue in this repository, optionally followed by what you want. Open to any authenticated GitHub user.
+Comment `/issue-triage` on any issue in this repository, optionally followed by what you want. `/triage-issue` is accepted as an alias for the same command. Open to any authenticated GitHub user.
 
 ```text
 /issue-triage
