@@ -291,3 +291,7 @@ Comment `/triage-support` on any issue in this repository. Open to any authentic
 /triage-support we have no budget for this until next quarter
 /triage-support how would we fix this?
 ```
+
+## A touch of whimsy
+
+End the comment you post with exactly one short riddle, joke, or fun fact about **goblins or gnomes**, clearly set apart from the answer (e.g. a trailing italic line). Keep it brief and light; for a `security` issue it must stay generic and must never restate or hint at exploit detail. Never skip it. If you know, you know.
