@@ -67,6 +67,7 @@ This repository automates issue handling with [GitHub Agentic Workflows (gh-aw)]
 |----------|---------|--------------|
 | `.github/workflows/aw-triage.md` | Issue opened/reopened, or `workflow_dispatch` | Classifies the issue, applies category and `severity:*` labels, posts one guidance comment |
 | `.github/workflows/aw-fixer.md` | `enhancement` or `security` label applied, or `workflow_dispatch` | Implements the fix and opens a draft PR on an `ai/`-prefixed branch |
+| `.github/workflows/aw-issue-triage.md` | `/issue-triage` slash command in an issue comment | On-demand deep re-triage: locates the implicated code in `src/`, cross-references `docs/VULNERABILITIES.md` and the pinned CVEs, finds related issues, refines labels, and publishes a backlog-context chart |
 
 Each workflow delegates its real work to a sub-agent in `.github/agents/`:
 
