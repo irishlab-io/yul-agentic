@@ -74,7 +74,7 @@ Safe outputs: `add-comment` (max 1), `add-labels` (max 3).
 
 ### `aw-issue-triage.md` — developer support and deep re-triage
 
-Triggers on the `/issue-triage` slash command in an issue comment. Open to **any authenticated GitHub user** (`roles: all`); pull request comments are excluded.
+Triggers on the `/issue-triage` slash command in an issue comment — `/triage-issue` is accepted as an alias, since the two halves are easy to transpose. Open to **any authenticated GitHub user** (`roles: all`); pull request comments are excluded.
 
 The command takes free text, and the workflow routes on it:
 
@@ -309,7 +309,8 @@ make run              # smoke test at http://localhost:8000
 
 ### The workflow did not fire
 
-- For `/issue-triage`: the comment must **start** with the command. A command mid-sentence does not match, and PR comments are excluded by design.
+- For `/issue-triage`: the comment must **start** with the command, spelled `/issue-triage` or `/triage-issue`. A command mid-sentence does not match, and PR comments are excluded by design.
+- A run that appears in the Actions tab with every job **skipped** is this gate rejecting the comment, not a broken workflow. No agent ran and no credits were spent — check the comment's first line.
 - For `aw-fixer`: confirm the applied label is exactly `enhancement` or `security`.
 - Check the Actions tab for a run that activated and then stopped — the `pre_activation` job gates on role and command match before any agent runs.
 
