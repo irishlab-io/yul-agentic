@@ -20,10 +20,10 @@ LABEL="security"
 # file|title
 ISSUES=(
   "pyyaml-code-execution.md|[security] pyyaml 5.3.1 is vulnerable (CVE-2020-14343)"
-  "requests-proxy-auth-report.md|[security] requests 2.27.1 leaks Proxy-Authorization on redirect (CVE-2023-32681)"
-  "sqli-auth-report.md|[security] SQL injection in authenticate_user() (CWE-89)"
-  "weak-session-token-report.md|[security] Predictable session tokens in generate_session_token() (CWE-330)"
-  "werkzeug-debugger-report.md|[security] werkzeug 2.2.3 debugger allows remote code execution (CVE-2024-34069)"
+  # "requests-proxy-auth-report.md|[security] requests 2.27.1 leaks Proxy-Authorization on redirect (CVE-2023-32681)"
+  # "sqli-auth-report.md|[security] SQL injection in authenticate_user() (CWE-89)"
+  # "weak-session-token-report.md|[security] Predictable session tokens in generate_session_token() (CWE-330)"
+  # "werkzeug-debugger-report.md|[security] werkzeug 2.2.3 debugger allows remote code execution (CVE-2024-34069)"
 )
 
 DRY_RUN=false

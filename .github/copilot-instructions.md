@@ -67,12 +67,14 @@ This repository automates issue handling with [GitHub Agentic Workflows (gh-aw)]
 |----------|---------|--------------|
 | `.github/workflows/aw-triage.md` | Issue opened/reopened, or `workflow_dispatch` | Classifies the issue, applies category and `severity:*` labels, posts one guidance comment |
 | `.github/workflows/aw-fixer.md` | `enhancement` or `security` label applied, or `workflow_dispatch` | Implements the fix and opens a draft PR on an `ai/`-prefixed branch |
+| `.github/workflows/aw-issue-triage.md` | `/issue-triage` slash command in an issue comment (open to any authenticated user) | Developer support and on-demand deep re-triage. Answers "why is this an issue?", false-positive claims, "we have no budget", and "how do I fix this?"; otherwise re-analyses the issue against `src/`, `docs/VULNERABILITIES.md`, and the pinned CVEs, and publishes a backlog-context chart |
 
 Each workflow delegates its real work to a sub-agent in `.github/agents/`:
 
 | Agent | Role |
 |-------|------|
 | `triage-analyst.agent.md` | Owns the category taxonomy, severity scale, and reporter-facing comment guidance |
+| `triage-support.agent.md` | Owns the developer-facing conversation: explaining why an issue was raised, adjudicating false-positive claims against the code, recording time/budget deferrals, and outlining a remediation approach. Recommends only — never applies `invalid`/`wontfix`, never closes |
 | `software-engineer.agent.md` | Owns codebase grounding, the fix-to-PR procedure, the PR quality bar, and security-remediation rules |
 | `security-reviewer.agent.md` | Reviews diffs for weaknesses introduced by the change, incomplete remediations, and regressions |
 
