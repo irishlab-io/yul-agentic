@@ -66,9 +66,7 @@ Summarize this issue in **two sentences or fewer**. No headings, no bullet lists
 {{/if}}
 
 {{#if experiments.style == 'detailed' }}
-Summarize this issue in detail: what was reported, the reproduction steps,
-the current state of the discussion, and what a maintainer should do next.
-Use short headed sections.
+Summarize this issue in detail: what was reported, the reproduction steps, the current state of the discussion, and what a maintainer should do next. Use short headed sections.
 {{/if}}
 
 Post the summary as a comment on the issue.
