@@ -194,20 +194,47 @@ features:
         finally:
             os.unlink(path)
 
-    def test_unsafe_yaml_loader_vulnerability(self):
-        """
-        Demonstrate CWE-502: yaml.load() with yaml.Loader deserialises
-        arbitrary Python objects.  This test verifies the loader is reached
-        without crashing on safe content.
-        """
-        content = "features:\n  search:\n    enabled: true\n"
+    @pytest.mark.unit
+    def test_load_flags_uses_safe_load(self, monkeypatch):
+        """load_flags() parses YAML with safe_load() instead of yaml.load()."""
+        content = "features:\n  search:\n    enabled: false\n"
         path = _write_flags_file(content)
         try:
+            called = {}
+
+            def fake_safe_load(stream):
+                called["used"] = True
+                return {"features": {"search": {"enabled": False}}}
+
+            monkeypatch.setattr(feature_flags.yaml, "safe_load", fake_safe_load)
             feature_flags.reload_flags(path)
-            # No exception means the unsafe loader was used (and accepted safe YAML).
-            assert feature_flags.is_enabled("search") is True
+            assert called.get("used") is True
+            assert feature_flags.is_enabled("search") is False
         finally:
             os.unlink(path)
+
+    @pytest.mark.unit
+    def test_repository_feature_flags_file_loads_all_flags(self):
+        """The checked-in feature_flags.yml still loads with all flags intact."""
+        flags_path = os.path.abspath(
+            os.path.join(os.path.dirname(__file__), "..", "feature_flags.yml")
+        )
+        feature_flags.reload_flags(flags_path)
+        flags = feature_flags.get_all_flags()
+
+        assert set(flags) == {
+            "authentication",
+            "todos",
+            "admin",
+            "files",
+            "api",
+            "search",
+            "utilities",
+        }
+        assert feature_flags.is_enabled("authentication", "login") is True
+        assert feature_flags.is_enabled("todos", "sharing") is True
+        assert feature_flags.is_enabled("admin", "command_execution") is True
+        assert feature_flags.is_enabled("utilities", "xxe") is True
 
     def test_file_not_found_uses_defaults(self):
         """A non-existent file path falls back to all-enabled defaults."""
