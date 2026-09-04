@@ -262,9 +262,9 @@ class TestVulnerabilityDemonstrations:
         # (In a secure app, it should be there)
         assert response.status_code == 200
 
-    def test_debug_mode_enabled(self, app):
-        """Test that debug mode is enabled (vulnerability)."""
-        assert app.config.get('DEBUG', False) or app.config.get('FLASK_ENV') == 'development'
+    def test_debug_mode_defaults_off(self, app):
+        """Test that debug mode defaults to off unless FLASK_DEBUG is set."""
+        assert app.config.get('DEBUG', False) is False
 
 
 class TestHomePage:

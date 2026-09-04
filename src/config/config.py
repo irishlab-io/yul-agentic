@@ -10,6 +10,14 @@ This configuration file currently carries multiple security weaknesses:
 
 import os
 
+
+def _env_flag(name: str, default: bool = False) -> bool:
+    value = os.environ.get(name)
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
 # CWE-798: Hard-coded credentials in source code
 # NEVER hardcode database credentials - use environment variables or secret management
 DATABASE_USER = "admin"
@@ -29,7 +37,7 @@ PASSWORD_HASH_ALGORITHM = "md5"
 
 # CWE-489: Debug mode enabled in production
 # Debug mode exposes sensitive information and provides interactive debugger
-DEBUG = True
+DEBUG = _env_flag("FLASK_DEBUG", default=False)
 
 # Security settings (all disabled for vulnerability demonstration)
 CSRF_ENABLED = False  # CWE-352: No CSRF protection
