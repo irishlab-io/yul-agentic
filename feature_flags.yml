@@ -11,10 +11,6 @@
 #   Set 'enabled: false' on a feature to disable it and all its sub-features.
 #   Set a sub-feature to 'false' to disable only that sub-feature.
 #
-# WARNING – open weakness in the loader (CWE-502):
-#   The YAML file is loaded with yaml.Loader (not yaml.safe_load).  Never
-#   include untrusted YAML in this file; it can execute arbitrary Python code.
-#
 # Example – disable admin command execution:
 #   admin:
 #     enabled: true
