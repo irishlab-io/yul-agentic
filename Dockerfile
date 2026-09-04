@@ -22,8 +22,7 @@ ENV DATABASE_PASSWORD="insecure_password123" \
     ADMIN_PASSWORD="admin"
 
 # CWE-489: Debug mode enabled
-ENV DEBUG=True \
-    FLASK_ENV=development
+ENV FLASK_DEBUG=0
 
 # Feature flags configuration (CWE-22: path not validated inside the app)
 # Override with -e FEATURE_FLAGS_FILE=/path/to/custom_flags.yml
