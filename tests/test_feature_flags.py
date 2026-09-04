@@ -194,20 +194,31 @@ features:
         finally:
             os.unlink(path)
 
-    def test_unsafe_yaml_loader_vulnerability(self):
+    def test_python_object_tags_are_rejected(self):
         """
-        Demonstrate CWE-502: yaml.load() with yaml.Loader deserialises
-        arbitrary Python objects.  This test verifies the loader is reached
-        without crashing on safe content.
+        Regression test for CVE-2020-14343 / CWE-502: a flag file carrying a
+        Python object tag must not be deserialised.  safe_load() raises a
+        ConstructorError, which load_flags() catches and falls back to the
+        all-enabled defaults instead of executing the payload.
         """
-        content = "features:\n  search:\n    enabled: true\n"
+        marker = os.path.join(tempfile.gettempdir(), "cve_2020_14343_marker")
+        if os.path.exists(marker):
+            os.unlink(marker)
+
+        content = (
+            "features: !!python/object/apply:os.system\n"
+            f'  ["touch {marker}"]\n'
+        )
         path = _write_flags_file(content)
         try:
             feature_flags.reload_flags(path)
-            # No exception means the unsafe loader was used (and accepted safe YAML).
-            assert feature_flags.is_enabled("search") is True
+            assert not os.path.exists(marker), "YAML payload was executed"
+            # Parsing failed safely, so the defaults are in force.
+            assert feature_flags.is_enabled("todos", "create") is True
         finally:
             os.unlink(path)
+            if os.path.exists(marker):
+                os.unlink(marker)
 
     def test_file_not_found_uses_defaults(self):
         """A non-existent file path falls back to all-enabled defaults."""
