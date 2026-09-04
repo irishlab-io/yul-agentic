@@ -103,7 +103,7 @@ Currently pinned to outdated packages:
 - Flask 2.2.5 (CVE-2023-30861, CVE-2023-25577)
 - SQLAlchemy 1.4.46 (CVE-2023-46695)
 - Jinja2 3.0.3 (CVE-2024-22195)
-- PyYAML 5.4 (CVE-2020-14343)
+- ~~PyYAML 5.3.1 (CVE-2020-14343)~~ — patched, now on 6.0.3
 - requests 2.27.1 (CVE-2023-32681)
 - Pillow 9.3.0 (CVE-2023-44271)
 

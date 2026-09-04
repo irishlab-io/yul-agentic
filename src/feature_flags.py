@@ -6,8 +6,6 @@ Flags can be toggled on or off per-feature and per-sub-feature.  When no
 configuration file is supplied every feature is enabled by default.
 
 Open weaknesses:
-- CWE-502: Unsafe YAML deserialization via yaml.load() with full Loader
-            (allows arbitrary Python object instantiation / code execution)
 - CWE-284: Runtime feature-flag bypass exposed through a query parameter
 - CWE-200: All flag state disclosed to unauthenticated callers via the API
 - CWE-22:  Flag-file path accepted from an environment variable without
@@ -83,9 +81,9 @@ def load_flags(flags_file: Optional[str] = None) -> None:
 
     CWE-22: The file path is used as-is; an attacker who controls the
     FEATURE_FLAGS_FILE environment variable can read arbitrary files.
-    CWE-502: yaml.load() with Loader=yaml.Loader deserialises arbitrary
-    Python objects, enabling remote code execution if the YAML is attacker-
-    controlled.  Always use yaml.safe_load() in production code.
+    The flag file is parsed with yaml.safe_load(), which restricts the
+    document to plain YAML types and rejects the Python object tags that
+    CVE-2020-14343 abused for remote code execution.
     """
     global _flags
 
@@ -99,11 +97,11 @@ def load_flags(flags_file: Optional[str] = None) -> None:
     if os.path.exists(flags_file):
         try:
             with open(flags_file, "r") as fh:
-                # VULNERABILITY: CWE-502 – yaml.load with the full Loader
-                # allows execution of arbitrary Python code embedded in the
-                # YAML file (e.g. !!python/object/apply:os.system ["cmd"]).
-                # Replace with yaml.safe_load(fh) in a real application.
-                loaded = yaml.load(fh, Loader=yaml.Loader)  # noqa: S506
+                # safe_load() only constructs standard YAML types, so a
+                # flag file containing tags such as
+                # !!python/object/apply:os.system ["cmd"] raises a
+                # ConstructorError instead of executing anything.
+                loaded = yaml.safe_load(fh)
 
             if loaded and isinstance(loaded, dict) and "features" in loaded:
                 _flags = loaded["features"]
