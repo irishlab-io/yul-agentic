@@ -5,6 +5,7 @@ Tests for the utility functions module.
 import pytest
 import os
 import tempfile
+from pathlib import Path
 from src import utils
 
 
@@ -256,6 +257,20 @@ class TestSSRF:
 
         assert result is not None
         assert result['success'] is False
+
+
+class TestRequestsPin:
+    """Test requests dependency pinning."""
+
+    def test_requests_pin_is_remediated(self):
+        """Test the app uses a fixed requests version."""
+        import re
+
+        pyproject = Path("pyproject.toml").read_text()
+        requirements = Path("requirements.txt").read_text()
+
+        assert re.search(r'requests==2\.31\.0', pyproject)
+        assert re.search(r'^requests==2\.31\.0$', requirements, re.M)
 
 
 class TestFileOperations:

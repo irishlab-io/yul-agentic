@@ -112,7 +112,7 @@ pyyaml==5.3.1
     #   ggshield
     #   pre-commit
     #   vulnerable-todo-app
-requests==2.27.1
+requests==2.31.0
     # via
     #   pygitguardian
     #   vulnerable-todo-app
