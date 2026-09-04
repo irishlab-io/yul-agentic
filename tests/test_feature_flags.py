@@ -194,18 +194,22 @@ features:
         finally:
             os.unlink(path)
 
-    def test_unsafe_yaml_loader_vulnerability(self):
-        """
-        Demonstrate CWE-502: yaml.load() with yaml.Loader deserialises
-        arbitrary Python objects.  This test verifies the loader is reached
-        without crashing on safe content.
-        """
+    def test_load_flags_uses_safe_load(self, monkeypatch):
+        """load_flags() should delegate YAML parsing to yaml.safe_load()."""
+        called = {}
+
+        def fake_safe_load(stream):
+            called["value"] = True
+            return {"features": {"search": {"enabled": False}}}
+
+        monkeypatch.setattr(feature_flags.yaml, "safe_load", fake_safe_load)
+
         content = "features:\n  search:\n    enabled: true\n"
         path = _write_flags_file(content)
         try:
             feature_flags.reload_flags(path)
-            # No exception means the unsafe loader was used (and accepted safe YAML).
-            assert feature_flags.is_enabled("search") is True
+            assert called["value"] is True
+            assert feature_flags.is_enabled("search") is False
         finally:
             os.unlink(path)
 
