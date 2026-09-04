@@ -4,6 +4,7 @@ AUTHENTICATION MODULE
 This module currently carries multiple authentication and session management weaknesses.
 """
 
+import re
 from flask import session, request
 from .models import db
 from .utils import (
@@ -103,6 +104,13 @@ def get_user_by_session_token(session_token):
 
     CWE-502: Insecure deserialization of session data
     """
+    if not session_token:
+        return None
+
+    # Accept only the new token format produced by secrets.token_urlsafe(32).
+    if not re.fullmatch(r"[A-Za-z0-9_-]{43}", session_token):
+        return None
+
     query = f"SELECT * FROM sessions WHERE session_token = '{session_token}'"
 
     try:
@@ -218,9 +226,7 @@ def logout(session_token):
     CWE-613: Insufficient Session Expiration
     Sessions are not properly invalidated.
     """
-    # VULNERABILITY: Session not actually deleted from database
-    # Just returns success without proper cleanup
-    return {"success": True, "message": "Logged out"}
+    return logout_user(session_token)
 
 
 def get_session_user(session_token):

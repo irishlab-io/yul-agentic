@@ -5,6 +5,7 @@ Tests for the utility functions module.
 import pytest
 import os
 import tempfile
+import re
 from src import utils
 
 
@@ -52,19 +53,19 @@ class TestSessionToken:
         token = utils.generate_session_token(user_id)
 
         assert token is not None
-        assert len(token) > 0
+        assert len(token) == 43
+        assert re.fullmatch(r"[A-Za-z0-9_-]{43}", token) is not None
+        assert re.fullmatch(r"[0-9a-f]{32}", token) is None
 
-    def test_generate_session_token_predictability(self):
-        """Test that session tokens are predictable (vulnerability)."""
-        # This demonstrates the vulnerability
+    def test_generate_session_token_uniqueness(self):
+        """Test that session tokens are not predictable."""
         user_id = 456
         token1 = utils.generate_session_token(user_id)
         token2 = utils.generate_session_token(user_id)
 
-        # Tokens should be different but predictable based on timestamp
-        # (This is a vulnerability demonstration)
         assert token1 is not None
         assert token2 is not None
+        assert token1 != token2
 
 
 class TestSerialization:

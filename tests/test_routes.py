@@ -5,6 +5,7 @@ Tests for Flask application routes.
 import pytest
 from flask import session
 from src import auth
+from src.models import db
 
 
 class TestAuthRoutes:
@@ -67,10 +68,16 @@ class TestAuthRoutes:
                 'password': 'password123'
             })
 
+            session_row = db.execute_query_one(
+                "SELECT session_token FROM sessions WHERE user_id = (SELECT id FROM users WHERE username = 'logouttest') ORDER BY id DESC LIMIT 1"
+            )
+            session_token = session_row['session_token']
+
             # Logout
             response = client.get('/logout', follow_redirects=True)
 
             assert response.status_code == 200
+            assert auth.get_session_user(session_token) is None
 
 
 class TestTodoRoutes:

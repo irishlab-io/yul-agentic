@@ -2,10 +2,11 @@
 Tests for the authentication module.
 """
 
+import hashlib
 import pytest
 from src import auth
 from src.models import db
-from src.utils import hash_password
+from src.utils import hash_password, serialize_session
 
 
 class TestRegistration:
@@ -147,6 +148,29 @@ class TestSessionManagement:
 
             # Session should be gone
             user = auth.get_session_user(token)
+            assert user is None
+
+    def test_legacy_session_token_is_rejected(self, app):
+        """Test that legacy MD5 session tokens no longer authenticate."""
+        with app.app_context():
+            legacy_token = hashlib.md5(b"1_1700000000.0").hexdigest()
+            db.execute_query(
+                "INSERT INTO sessions (user_id, session_token, session_data) VALUES (?, ?, ?)",
+                (
+                    1,
+                    legacy_token,
+                    serialize_session(
+                        {
+                            'user_id': 1,
+                            'username': 'admin',
+                            'is_admin': True,
+                        }
+                    ),
+                ),
+            )
+
+            user = auth.get_session_user(legacy_token)
+
             assert user is None
 
 
