@@ -74,7 +74,7 @@ repos:
           ^mkdocs.yml|
           ^\.github/workflows/.*\.lock\.yml$
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.12.7
+    rev: 0.12.9
     hooks:
       - id: uv-export
         name: "python | uv: export dependencies"
