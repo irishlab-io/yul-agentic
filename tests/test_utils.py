@@ -2,9 +2,12 @@
 Tests for the utility functions module.
 """
 
-import pytest
 import os
+import re
 import tempfile
+
+import pytest
+
 from src import utils
 
 
@@ -46,25 +49,29 @@ class TestPasswordHashing:
 class TestSessionToken:
     """Test session token generation."""
 
-    def test_generate_session_token(self):
-        """Test session token generation."""
-        user_id = 123
-        token = utils.generate_session_token(user_id)
+    def test_generate_session_token_uses_csprng(self, monkeypatch):
+        """Test that session tokens use the CSPRNG helper."""
+        calls = []
+
+        def fake_token_urlsafe(num_bytes):
+            calls.append(num_bytes)
+            return "secure-token"
+
+        monkeypatch.setattr(utils.secrets, "token_urlsafe", fake_token_urlsafe)
+
+        token = utils.generate_session_token(123)
+
+        assert token == "secure-token"
+        assert calls == [32]
+
+    def test_generate_session_token_format(self):
+        """Test that generated session tokens have the expected format."""
+        token = utils.generate_session_token(456)
 
         assert token is not None
-        assert len(token) > 0
-
-    def test_generate_session_token_predictability(self):
-        """Test that session tokens are predictable (vulnerability)."""
-        # This demonstrates the vulnerability
-        user_id = 456
-        token1 = utils.generate_session_token(user_id)
-        token2 = utils.generate_session_token(user_id)
-
-        # Tokens should be different but predictable based on timestamp
-        # (This is a vulnerability demonstration)
-        assert token1 is not None
-        assert token2 is not None
+        assert len(token) >= 43
+        assert re.fullmatch(r"[A-Za-z0-9_-]+", token)
+        assert re.fullmatch(r"[0-9a-f]{32}", token) is None
 
 
 class TestSerialization:

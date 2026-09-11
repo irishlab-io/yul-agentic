@@ -2,10 +2,12 @@
 Tests for the authentication module.
 """
 
+import hashlib
 import pytest
+
 from src import auth
 from src.models import db
-from src.utils import hash_password
+from src.utils import hash_password, serialize_session
 
 
 class TestRegistration:
@@ -132,22 +134,67 @@ class TestSessionManagement:
             assert user is not None
             assert user['username'] == 'sessionuser2'
 
-    def test_logout_user(self, app):
-        """Test user logout."""
+    @pytest.mark.parametrize(
+        "logout_func",
+        [
+            pytest.param(auth.logout, id="logout"),
+            pytest.param(auth.logout_user, id="logout_user"),
+        ],
+    )
+    def test_logout_invalidates_session(self, app, logout_func):
+        """Test that logout functions delete the session row."""
         with app.app_context():
             # Register and login
             auth.register_user('logoutuser', 'password123')
             auth_result = auth.authenticate_user('logoutuser', 'password123')
             token = auth_result['session_token']
 
+            assert (
+                db.execute_query_one(
+                    "SELECT id FROM sessions WHERE session_token = ?",
+                    (token,),
+                )
+                is not None
+            )
+
             # Logout
-            result = auth.logout_user(token)
+            result = logout_func(token)
 
             assert result['success'] is True
 
             # Session should be gone
             user = auth.get_session_user(token)
             assert user is None
+
+    def test_get_session_user_rejects_legacy_token(self, app):
+        """Test that legacy MD5 session tokens no longer authenticate."""
+        with app.app_context():
+            user = db.execute_query_one(
+                "SELECT id, username FROM users WHERE username = ?",
+                ("testuser",),
+            )
+            legacy_token = hashlib.md5(b"legacy-session").hexdigest()
+            session_data = serialize_session(
+                {
+                    "user_id": user["id"],
+                    "username": user["username"],
+                    "is_admin": 0,
+                }
+            )
+
+            db.execute_query(
+                "INSERT INTO sessions (user_id, session_token, session_data) VALUES (?, ?, ?)",
+                (user["id"], legacy_token, session_data),
+            )
+
+            assert (
+                db.execute_query_one(
+                    "SELECT id FROM sessions WHERE session_token = ?",
+                    (legacy_token,),
+                )
+                is not None
+            )
+            assert auth.get_session_user(legacy_token) is None
 
 
 class TestAuthorizationBypass:

@@ -2,9 +2,8 @@
 Tests for Flask application routes.
 """
 
-import pytest
-from flask import session
 from src import auth
+from src.models import db
 
 
 class TestAuthRoutes:
@@ -62,15 +61,32 @@ class TestAuthRoutes:
         with app.app_context():
             # Register and login
             auth.register_user('logouttest', 'password123')
-            client.post('/login', data={
-                'username': 'logouttest',
-                'password': 'password123'
-            })
+            auth_result = auth.authenticate_user('logouttest', 'password123')
+            token = auth_result['session_token']
+
+            assert (
+                db.execute_query_one(
+                    "SELECT id FROM sessions WHERE session_token = ?",
+                    (token,),
+                )
+                is not None
+            )
 
             # Logout
-            response = client.get('/logout', follow_redirects=True)
+            response = client.get(
+                '/logout',
+                headers={'Cookie': f'session_token={token}'},
+                follow_redirects=True,
+            )
 
             assert response.status_code == 200
+            assert (
+                db.execute_query_one(
+                    "SELECT id FROM sessions WHERE session_token = ?",
+                    (token,),
+                )
+                is None
+            )
 
 
 class TestTodoRoutes:
