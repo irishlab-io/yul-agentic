@@ -2,9 +2,7 @@
 Tests for Flask application routes.
 """
 
-import pytest
-from flask import session
-from src import auth
+from src import auth, create_app
 
 
 class TestAuthRoutes:
@@ -262,9 +260,17 @@ class TestVulnerabilityDemonstrations:
         # (In a secure app, it should be there)
         assert response.status_code == 200
 
-    def test_debug_mode_enabled(self, app):
-        """Test that debug mode is enabled (vulnerability)."""
-        assert app.config.get('DEBUG', False) or app.config.get('FLASK_ENV') == 'development'
+    def test_debug_mode_defaults_off(self, app):
+        """Test that debug mode defaults to off."""
+        assert app.config.get("DEBUG", False) is False
+
+    def test_debug_mode_can_be_enabled_from_env(self, monkeypatch):
+        """Test that FLASK_DEBUG enables debug mode explicitly."""
+        monkeypatch.setenv("FLASK_DEBUG", "1")
+
+        test_app = create_app()
+
+        assert test_app.config.get("DEBUG", False) is True
 
 
 class TestHomePage:

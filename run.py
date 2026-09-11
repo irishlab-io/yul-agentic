@@ -9,6 +9,5 @@ from src import create_app
 
 if __name__ == "__main__":
     app = create_app()
-    # CWE-489: Debug mode enabled in production
-    # This exposes sensitive debug information and the Werkzeug debugger
-    app.run(host="0.0.0.0", port=8000, debug=True)
+    # Debug mode is controlled by FLASK_DEBUG and defaults to off.
+    app.run(host="0.0.0.0", port=8000, debug=app.config.get("DEBUG", False))

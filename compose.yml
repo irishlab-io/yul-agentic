@@ -39,8 +39,7 @@ services:
 
     # CWE-798: Hardcoded credentials in environment
     environment:
-      - DEBUG=True
-      - FLASK_ENV=development
+      - FLASK_DEBUG=0
       - DATABASE_PASSWORD=insecure123
       - SECRET_KEY=hardcoded-secret-key
       - API_KEY=12345
@@ -98,5 +97,5 @@ networks:
 # 8. No security options (no-new-privileges, seccomp, apparmor)
 # 9. Mounting host directories with write access
 # 10. No health checks
-# 11. Debug mode enabled
+# 11. Debug mode disabled by default
 # 12. Multiple unnecessary exposed ports
