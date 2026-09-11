@@ -2,9 +2,11 @@
 Tests for the utility functions module.
 """
 
-import pytest
 import os
 import tempfile
+
+import pytest
+import requests
 from src import utils
 
 
@@ -219,6 +221,12 @@ class TestXMLParsing:
 
 class TestSSRF:
     """Test SSRF vulnerability."""
+
+    def test_requests_version_is_patched(self):
+        """Test the bundled requests version includes the redirect fix."""
+        version = tuple(int(part) for part in requests.__version__.split(".")[:3])
+
+        assert version >= (2, 31, 0)
 
     def test_fetch_url_external(self):
         """Test fetching external URL."""
