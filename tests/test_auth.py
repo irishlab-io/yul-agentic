@@ -5,7 +5,6 @@ Tests for the authentication module.
 import pytest
 from src import auth
 from src.models import db
-from src.utils import hash_password
 
 
 class TestRegistration:
@@ -90,19 +89,33 @@ class TestAuthentication:
 
             assert result['success'] is False
 
-    def test_authenticate_sql_injection_vulnerability(self, app):
-        """Test that the SQL injection weakness is still present (open backlog item)."""
+    def test_authenticate_user_sql_injection_blocked(self, app):
+        """Test that username injection attempts do not bypass authentication."""
         with app.app_context():
-            # Register a user
             auth.register_user('victim', 'password123')
 
-            # Try SQL injection bypass: ' OR '1'='1
-            # This should succeed due to the vulnerability
             result = auth.authenticate_user("victim' OR '1'='1'--", 'anything')
 
-            # The vulnerability allows this to succeed
-            # In a secure app, this should fail
-            assert result is not None  # Just checking it doesn't crash
+            assert result['success'] is False
+            assert 'Invalid credentials' in result['error']
+
+    def test_get_user_by_username_sql_injection_blocked(self, app):
+        """Test that username lookups treat injected SQL as data."""
+        with app.app_context():
+            auth.register_user('lookupuser', 'password123')
+
+            result = auth.get_user_by_username("lookupuser' OR '1'='1'--")
+
+            assert result is None
+
+    def test_get_user_by_id_sql_injection_blocked(self, app):
+        """Test that ID lookups treat injected SQL as data."""
+        with app.app_context():
+            auth.register_user('iduser', 'password123')
+
+            result = auth.get_user_by_id("1 OR 1=1")
+
+            assert result is None
 
 
 class TestSessionManagement:
@@ -132,6 +145,18 @@ class TestSessionManagement:
             assert user is not None
             assert user['username'] == 'sessionuser2'
 
+    def test_get_session_user_sql_injection_blocked(self, app, client):
+        """Test that session token lookups treat injected SQL as data."""
+        with app.app_context():
+            auth.register_user('sessionlookup', 'password123')
+            auth_result = auth.authenticate_user('sessionlookup', 'password123')
+
+            result = auth.get_session_user(
+                f"{auth_result['session_token']}' OR '1'='1"
+            )
+
+            assert result is None
+
     def test_logout_user(self, app):
         """Test user logout."""
         with app.app_context():
@@ -148,6 +173,16 @@ class TestSessionManagement:
             # Session should be gone
             user = auth.get_session_user(token)
             assert user is None
+
+    def test_change_password_rejects_injected_user_id(self, app):
+        """Test that change_password treats a crafted user_id as data."""
+        with app.app_context():
+            auth.register_user('changepassuser', 'password123')
+
+            result = auth.change_password("1 OR 1=1", 'password123', 'newpass123')
+
+            assert result['success'] is False
+            assert result['error'] == 'User not found'
 
 
 class TestAuthorizationBypass:

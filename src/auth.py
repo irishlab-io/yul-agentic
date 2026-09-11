@@ -48,11 +48,11 @@ def authenticate_user(username, password):
 
     Vulnerable authentication that allows SQL injection.
     """
-    # VULNERABILITY: SQL Injection via string concatenation
-    query = f"SELECT * FROM users WHERE username = '{username}' AND password = '{hash_password(password)}'"
-
     try:
-        user = db.execute_query_one(query)
+        user = db.execute_query_one(
+            "SELECT * FROM users WHERE username = ? AND password = ?",
+            (username, hash_password(password)),
+        )
         if user:
             # CWE-613: Insufficient Session Expiration
             # Create session with predictable token
@@ -103,10 +103,11 @@ def get_user_by_session_token(session_token):
 
     CWE-502: Insecure deserialization of session data
     """
-    query = f"SELECT * FROM sessions WHERE session_token = '{session_token}'"
-
     try:
-        session_record = db.execute_query_one(query)
+        session_record = db.execute_query_one(
+            "SELECT * FROM sessions WHERE session_token = ?",
+            (session_token,),
+        )
         if session_record:
             # VULNERABILITY: Deserializing untrusted data
             session_data = deserialize_session(session_record["session_data"])
@@ -170,8 +171,7 @@ def change_password(user_id, old_password, new_password):
     # VULNERABILITY: No password strength requirements
     # VULNERABILITY: SQL Injection possible
 
-    query = f"SELECT * FROM users WHERE id = {user_id}"
-    user = db.execute_query_one(query)
+    user = db.execute_query_one("SELECT * FROM users WHERE id = ?", (user_id,))
 
     if not user:
         return {"success": False, "error": "User not found"}
@@ -195,9 +195,10 @@ def get_user_by_id(user_id):
 
     CWE-89: SQL Injection
     """
-    # VULNERABILITY: SQL Injection via string concatenation
-    query = f"SELECT id, username, email, is_admin, created_at FROM users WHERE id = {user_id}"
-    return db.execute_query_one(query)
+    return db.execute_query_one(
+        "SELECT id, username, email, is_admin, created_at FROM users WHERE id = ?",
+        (user_id,),
+    )
 
 
 def get_user_by_username(username):
@@ -206,9 +207,10 @@ def get_user_by_username(username):
 
     CWE-89: SQL Injection
     """
-    # VULNERABILITY: SQL Injection
-    query = f"SELECT id, username, email, is_admin, created_at FROM users WHERE username = '{username}'"
-    return db.execute_query_one(query)
+    return db.execute_query_one(
+        "SELECT id, username, email, is_admin, created_at FROM users WHERE username = ?",
+        (username,),
+    )
 
 
 def logout(session_token):
