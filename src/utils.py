@@ -4,13 +4,17 @@ UTILITY FUNCTIONS
 This module currently carries various security weaknesses.
 """
 
-import os
-import subprocess
 import hashlib
+import os
 import pickle
+import re
+import secrets
+import subprocess
+
 import requests
 import xml.etree.ElementTree as ET
 from xml.etree.ElementTree import XMLParser
+
 from . import config
 
 
@@ -157,16 +161,24 @@ def parse_xml_file(filepath):
 
 def generate_session_token(user_id):
     """
-    CWE-330: Use of Insufficiently Random Values
+    Generate a cryptographically secure session token.
 
-    Generates predictable session tokens.
-    Should use cryptographically secure random generator.
+    The user_id parameter is retained for API compatibility with existing
+    call sites, but it is not used to derive the token value.
     """
-    # VULNERABILITY: Predictable token generation using MD5 of user_id
-    import time
+    return secrets.token_urlsafe(32)
 
-    token_string = f"{user_id}_{time.time()}"
-    return hashlib.md5(token_string.encode()).hexdigest()
+
+def is_legacy_session_token(session_token):
+    """
+    Detect legacy session tokens created with the old MD5 scheme.
+
+    Legacy tokens are 32-character lowercase hexadecimal strings.
+    """
+    return (
+        isinstance(session_token, str)
+        and re.fullmatch(r"[0-9a-f]{32}", session_token) is not None
+    )
 
 
 def check_file_checksum(filename, checksum_type="md5"):

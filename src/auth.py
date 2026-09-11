@@ -10,6 +10,7 @@ from .utils import (
     hash_password,
     verify_password,
     generate_session_token,
+    is_legacy_session_token,
     serialize_session,
     deserialize_session,
 )
@@ -103,10 +104,14 @@ def get_user_by_session_token(session_token):
 
     CWE-502: Insecure deserialization of session data
     """
-    query = f"SELECT * FROM sessions WHERE session_token = '{session_token}'"
+    if is_legacy_session_token(session_token):
+        return None
 
     try:
-        session_record = db.execute_query_one(query)
+        session_record = db.execute_query_one(
+            "SELECT * FROM sessions WHERE session_token = ?",
+            (session_token,),
+        )
         if session_record:
             # VULNERABILITY: Deserializing untrusted data
             session_data = deserialize_session(session_record["session_data"])
@@ -218,9 +223,7 @@ def logout(session_token):
     CWE-613: Insufficient Session Expiration
     Sessions are not properly invalidated.
     """
-    # VULNERABILITY: Session not actually deleted from database
-    # Just returns success without proper cleanup
-    return {"success": True, "message": "Logged out"}
+    return logout_user(session_token)
 
 
 def get_session_user(session_token):
