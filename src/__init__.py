@@ -55,6 +55,7 @@ def create_app():
 
     # Load configuration
     app.config.from_object(config)
+    app.config["DEBUG"] = config.get_debug_setting()
 
     # Ensure upload directory exists
     os.makedirs(config.UPLOAD_FOLDER, exist_ok=True)

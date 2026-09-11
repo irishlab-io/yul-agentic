@@ -27,9 +27,25 @@ SECRET_KEY = "super-secret-key-123"  # Predictable and hardcoded!
 # MD5 is cryptographically broken and should never be used for passwords
 PASSWORD_HASH_ALGORITHM = "md5"
 
+
+def _get_bool_env(name: str, default: bool = False) -> bool:
+    """Return a boolean environment variable value."""
+    value = os.getenv(name)
+    if value is None:
+        return default
+
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
+# Convenience helper for runtime debug checks.
+def get_debug_setting() -> bool:
+    """Return whether Flask debug mode is enabled."""
+    return _get_bool_env("FLASK_DEBUG", default=False)
+
+
 # CWE-489: Debug mode enabled in production
-# Debug mode exposes sensitive information and provides interactive debugger
-DEBUG = True
+# Debug mode now defaults to off and can be enabled explicitly with FLASK_DEBUG.
+DEBUG = get_debug_setting()
 
 # Security settings (all disabled for vulnerability demonstration)
 CSRF_ENABLED = False  # CWE-352: No CSRF protection
