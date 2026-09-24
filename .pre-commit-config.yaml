@@ -22,7 +22,7 @@ repos:
         stages:
           - manual
   - repo: https://github.com/commitizen-tools/commitizen
-    rev: v4.18.0
+    rev: v4.18.1
     hooks:
       - id: commitizen
         name: "commitizen | validate commit messages"
@@ -74,7 +74,7 @@ repos:
           ^mkdocs.yml|
           ^\.github/workflows/.*\.lock\.yml$
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.12.7
+    rev: 0.12.15
     hooks:
       - id: uv-export
         name: "python | uv: export dependencies"
@@ -82,7 +82,7 @@ repos:
       - id: uv-lock
         name: "python | uv: lock dependencies"
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.16.5
+    rev: v0.16.8
     hooks:
       - id: ruff-check
         name: "python | lint: run ruff-check"
